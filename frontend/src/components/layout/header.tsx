@@ -1,7 +1,9 @@
 import Link from "next/link";
 
+import { ButtonLink } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import {
+  CloseIcon,
   HeartIcon,
   MenuBurgerIcon,
   MessageIcon,
@@ -15,8 +17,8 @@ const mainNavigation = [
 
 export function Header() {
   return (
-    <header className="flex justify-center md:mt-10">
-      <div className="bg-neutral-white max-w-175 rounded-lg shadow-menu container-app flex h-16 items-center justify-between md:gap-7">
+    <header className="flex flex-col items-center justify-center md:mt-10">
+      <div className="bg-neutral-white md:max-w-175 md:rounded-lg md:shadow-menu container-app flex h-16 items-center justify-between md:gap-7">
         <nav
           className="hidden items-center gap-8 md:flex"
           aria-label="Navigation principale"
@@ -68,42 +70,44 @@ export function Header() {
           </Link>
         </nav>
 
-        <details className="relative md:hidden">
+        <details className="group md:hidden">
           <summary className="flex size-10 cursor-pointer list-none items-center justify-center text-neutral-dark-grey marker:content-none">
-            <span className="sr-only">Ouvrir le menu</span>
-            <MenuBurgerIcon className="size-11" />
+            <span className="sr-only group-open:hidden">Ouvrir le menu</span>
+            <span className="sr-only hidden group-open:inline">Fermer le menu</span>
+            <MenuBurgerIcon className="size-11 group-open:hidden" />
+            <CloseIcon className="hidden size-11 group-open:block" />
           </summary>
           <nav
-            className="absolute right-0 z-20 mt-2 flex w-56 flex-col gap-1 rounded-md border border-neutral-light-grey bg-neutral-white p-2 shadow-dropdown"
+            className="absolute right-0 z-20 w-full h-[calc(100vh-4rem)] top-0 mt-16 pb-10 flex flex-col gap-1 bg-neutral-white"
             aria-label="Navigation mobile"
           >
             {mainNavigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-sm px-3 py-2 text-sm font-medium hover:bg-brand-light-orange hover:text-brand-main-red"
+                className="rounded-sm px-3 py-7 text-2xl border-b border-neutral-light-grey hover:bg-brand-light-orange hover:text-brand-main-red"
               >
                 {item.label}
               </Link>
             ))}                   
             <Link
               href="/messages"
-              className="rounded-sm px-3 py-2 text-sm font-medium hover:bg-brand-light-orange hover:text-brand-main-red"
+              className="rounded-sm px-3 py-7 text-2xl border-b border-neutral-light-grey hover:bg-brand-light-orange hover:text-brand-main-red"
             >
               Messagerie
             </Link>
              <Link
               href="/favorites"
-              className="rounded-sm px-3 py-2 text-sm font-medium hover:bg-brand-light-orange hover:text-brand-main-red"
+              className="rounded-sm px-3 py-7 text-2xl hover:bg-brand-light-orange hover:text-brand-main-red"
             >
               Favoris
             </Link>
-            <Link
+            <ButtonLink
               href="/properties/new"
-              className="flex items-center justify-center gap-1 rounded-sm px-3 py-2 text-sm font-medium text-neutral-white bg-brand-main-red hover:bg-brand-dark-orange"
-            >              
+              className="mt-3 self-start"
+            >
               Ajouter un logement
-            </Link>
+            </ButtonLink>
           </nav>
         </details>
       </div>
