@@ -16,6 +16,8 @@ type PropertiesResult =
   | { properties: null; failed: true };
 
 async function loadProperties(): Promise<PropertiesResult> {
+  // pour tester le chargement suspendu
+  // await new Promise((resolve) => setTimeout(resolve, 5000));
   try {
     const properties = await getProperties();
 

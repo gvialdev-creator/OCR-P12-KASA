@@ -16,3 +16,9 @@ export interface Property {
   ratings_count: number;
   host?: PropertyHost;
 }
+
+export interface PropertyDetail extends Property {
+  pictures: string[];
+  equipments: string[];
+  tags: string[];
+}

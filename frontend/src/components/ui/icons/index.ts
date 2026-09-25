@@ -5,5 +5,8 @@ export { DeleteIcon } from "./delete-icon";
 export { HeartIcon } from "./heart-icon";
 export { MenuBurgerIcon } from "./menu-burger-icon";
 export { MessageIcon } from "./message-icon";
+export { PauseIcon } from "./pause-icon";
 export { PinIcon } from "./pin-icon";
+export { PlayIcon } from "./play-icon";
 export { PlusIcon } from "./plus-icon";
+export { StarIcon } from "./star-icon";

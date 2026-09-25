@@ -21,6 +21,7 @@ export function HomeHero() {
           alt="Appartement lumineux proposé à la location sur Kasa"
           fill
           preload
+          loading="eager"
           sizes="(max-width: 1168px) 100vw, 1120px"
           className="object-cover"
         />
