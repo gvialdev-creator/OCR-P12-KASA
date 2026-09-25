@@ -36,6 +36,7 @@
   --radius-md: 7px;
   --radius-lg: 10px;
   --radius-xl: 14px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
 
   /* ========================================
@@ -58,8 +59,8 @@
      ======================================== */
 
   --spacing-page: 24px;
-  --spacing-section: 32px;
-  --spacing-component: 16px;
+  --spacing-section: 40px;
+  --spacing-component: 24px;
 }
 
 @layer base {
