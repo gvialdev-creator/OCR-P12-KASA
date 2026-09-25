@@ -51,6 +51,8 @@
   --shadow-dropdown:
     0 8px 24px rgb(0 0 0 / 0.12);
 
+  --shadow-menu:
+    0 4px 4px rgb(182 182 182 / 0.05);
   /* ========================================
      Layout
      ======================================== */
@@ -69,6 +71,6 @@
 }
 
 @utility container-app {
-  max-width: 80rem;   /* 1280px */
+  max-width: 73rem;   /* 1168px */
   @apply w-full px-6 m-auto;
 }
