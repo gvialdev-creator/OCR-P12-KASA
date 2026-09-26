@@ -31,21 +31,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function AboutPage() {
   return (
-    <main className="container-app flex-1 py-[28px] md:py-10">
+    <main className="container-app flex-1 py-section">
       <article
         aria-labelledby="about-title"
-        className="mx-auto max-w-[1168px]"
+        className="mx-auto"
       >
         <header className="mb-8 text-center">
           <h1
             id="about-title"
-            className="text-[32px] font-bold leading-none text-brand-main-red"
+            className="text-center text-[32px] font-bold text-brand-main-red"
           >
             À propos
           </h1>
         </header>
 
-        <section className="mx-auto max-w-[980px] space-y-6 text-center text-[18px] leading-8 text-neutral-dark-grey">
+        <section className="mx-auto max-w-3xl space-y-6 text-center text-sm">
           <p>
             Chez Kasa, nous croyons que chaque voyage mérite un lieu unique où se
             sentir bien.
@@ -58,8 +58,8 @@ export default function AboutPage() {
           </p>
         </section>
 
-        <div className="mt-8 overflow-hidden rounded-[22px]">
-          <div className="relative h-[220px] sm:h-[280px] lg:h-[380px]">
+        <div className="mt-10 overflow-hidden rounded-2xl">
+          <div className="relative  h-114.5">
             <Image
               src="/images/about-hero.webp"
               alt="Un paysage de montagne avec une maison et un lac"
@@ -72,18 +72,18 @@ export default function AboutPage() {
         </div>
 
         <section
-          className="mt-8 grid items-center gap-8 lg:grid-cols-[1fr_1.3fr]"
+          className="mt-10 grid items-center gap-8 lg:grid-cols-[1.3fr_1fr]"
           aria-labelledby="mission-title"
         >
-          <div className="max-w-[470px]">
+          <div className="">
             <h2
               id="mission-title"
-              className="mb-5 text-[22px] font-bold text-brand-main-red"
+              className=" text-lg font-bold text-brand-main-red"
             >
               Notre mission est simple :
             </h2>
 
-            <ol className="list-decimal space-y-4 pl-6 text-[17px] leading-7 text-neutral-dark-grey">
+            <ol className="mt-4 list-decimal space-y-4 pl-6 text-sm">
               <li>Offrir une plateforme fiable et simple d’utilisation</li>
               <li>Proposer des hébergements variés et de qualité</li>
               <li>
@@ -91,15 +91,15 @@ export default function AboutPage() {
               </li>
             </ol>
 
-            <p className="mt-6 text-[17px] leading-7 text-neutral-dark-grey">
+            <p className="mt-4 text-lg font-medium text-brand-main-red">
               Que vous cherchiez un appartement cosy en centre-ville, une maison en
               bord de mer ou un chalet à la montagne, Kasa vous accompagne pour que
               chaque séjour devienne un souvenir inoubliable.
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-[22px]">
-            <div className="relative h-[260px] sm:h-[300px] lg:h-[320px]">
+          <div className="overflow-hidden rounded-2xl">
+            <div className="relative h-114.5">
               <Image
                 src="/images/about-article.webp"
                 alt="Un chalet au bord d'un lac au pied d'une montagne"

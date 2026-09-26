@@ -29,7 +29,7 @@ export function HowItWorks() {
             >
                 Comment ça marche ?
             </h2>
-            <p className="mx-auto mt-2 max-w-3xl text-center text-sm leading-7 text-neutral-dark-grey">
+            <p className="mx-auto mt-2 max-w-3xl text-center text-sm leading-7">
             Que vous partiez pour un week-end improvisé, des vacances en famille ou un voyage professionnel, 
             Kasa vous aide à trouver un lieu qui vous ressemble.
             </p>

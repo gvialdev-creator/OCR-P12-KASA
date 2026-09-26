@@ -18,7 +18,7 @@ const mainNavigation = [
 export function Header() {
   return (
     <header className="flex flex-col items-center justify-center md:mt-10">
-      <div className="bg-neutral-white md:max-w-175 md:rounded-lg md:shadow-menu container-app flex h-16 items-center justify-between md:gap-7">
+      <div className="text-neutral-black bg-neutral-white md:max-w-175 md:rounded-lg md:shadow-menu container-app flex h-16 items-center justify-between md:gap-7">
         <nav
           className="hidden items-center gap-8 md:flex"
           aria-label="Navigation principale"
