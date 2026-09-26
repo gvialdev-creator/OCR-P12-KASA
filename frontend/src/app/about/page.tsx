@@ -75,40 +75,52 @@ export default function AboutPage() {
           className="mt-10 grid items-center gap-8 lg:grid-cols-[1.3fr_1fr]"
           aria-labelledby="mission-title"
         >
-          <div className="">
-            <h2
-              id="mission-title"
-              className=" text-lg font-bold text-brand-main-red"
-            >
-              Notre mission est simple :
-            </h2>
+            <div className="">
+                <h2
+                id="mission-title"
+                className=" text-lg font-bold text-brand-main-red"
+                >
+                Notre mission est simple :
+                </h2>
 
-            <ol className="mt-4 list-decimal space-y-4 pl-6 text-sm">
-              <li>Offrir une plateforme fiable et simple d’utilisation</li>
-              <li>Proposer des hébergements variés et de qualité</li>
-              <li>
-                Favoriser des échanges humains et chaleureux entre hôtes et voyageurs
-              </li>
-            </ol>
-
-            <p className="mt-4 text-lg font-medium text-brand-main-red">
-              Que vous cherchiez un appartement cosy en centre-ville, une maison en
-              bord de mer ou un chalet à la montagne, Kasa vous accompagne pour que
-              chaque séjour devienne un souvenir inoubliable.
-            </p>
-          </div>
-
-          <div className="overflow-hidden rounded-2xl">
-            <div className="relative h-114.5">
-              <Image
-                src="/images/about-article.webp"
-                alt="Un chalet au bord d'un lac au pied d'une montagne"
-                fill
-                sizes="(max-width: 768px) 100vw, 760px"
-                className="object-cover"
-              />
+                <ol className="mt-4 list-decimal space-y-4 pl-6 text-sm">
+                    <li>Offrir une plateforme fiable et simple d’utilisation</li>
+                    <li>Proposer des hébergements variés et de qualité</li>
+                    <li>
+                        Favoriser des échanges humains et chaleureux entre hôtes et voyageurs
+                    </li>
+                </ol>
+                <div className="mt-4 block lg:hidden overflow-hidden rounded-2xl">
+                    <div className="relative h-114.5">
+                    <Image
+                        src="/images/about-article.webp"
+                        alt="Un chalet au bord d'un lac au pied d'une montagne"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 760px"
+                        className="object-cover"
+                    />
+                    </div>
+                </div>
+                <p className="mt-4 text-lg font-medium text-brand-main-red">
+                Que vous cherchiez un appartement cosy en centre-ville, une maison en
+                bord de mer ou un chalet à la montagne, Kasa vous accompagne pour que
+                chaque séjour devienne un souvenir inoubliable.
+                </p>
             </div>
-          </div>
+            
+            <div className="hidden lg:block">
+                <div className="overflow-hidden rounded-2xl">
+                    <div className="relative h-114.5">
+                    <Image
+                        src="/images/about-article.webp"
+                        alt="Un chalet au bord d'un lac au pied d'une montagne"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 760px"
+                        className="object-cover"
+                    />
+                    </div>
+                </div>
+            </div>
         </section>
       </article>
     </main>
