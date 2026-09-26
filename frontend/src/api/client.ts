@@ -2,7 +2,14 @@ import { ApiError } from "@/api/errors";
 
 const apiBaseUrl = process.env.API_BASE_URL;
 
-export async function apiFetch<T>(path: string): Promise<T> {
+interface ApiFetchOptions {
+  revalidate?: number;
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: ApiFetchOptions = {},
+): Promise<T> {
   if (!apiBaseUrl) {
     throw new ApiError("La variable API_BASE_URL n'est pas configurée.");
   }
@@ -10,7 +17,10 @@ export async function apiFetch<T>(path: string): Promise<T> {
   let response: Response;
 
   try {
-    response = await fetch(new URL(path, apiBaseUrl), { cache: "no-store" });
+    const requestOptions = options.revalidate
+      ? { next: { revalidate: options.revalidate } }
+      : { cache: "no-store" as const };
+    response = await fetch(new URL(path, apiBaseUrl), requestOptions);
   } catch {
     throw new ApiError(`Impossible de joindre l'API à l'adresse ${apiBaseUrl}.`);
   }

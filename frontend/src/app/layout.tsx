@@ -17,6 +17,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Kasa",
   description: "Application de location immobilière Kasa",
+  ...(process.env.SITE_URL && {
+    metadataBase: new URL(process.env.SITE_URL),
+  }),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

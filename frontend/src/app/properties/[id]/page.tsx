@@ -8,7 +8,7 @@ import type { PropertyDetail } from "@/domain/types/property";
 import { PropertyDetailView } from "@/features/properties/components/property-detail-view";
 import { getPropertyDetail } from "@/features/properties/services/get-property-detail";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 interface PropertyPageProps {
   params: Promise<{ id: string }>;
@@ -36,9 +36,35 @@ export async function generateMetadata({ params }: PropertyPageProps): Promise<M
 
   if (result.state !== "success") return { title: "Logement | Kasa" };
 
+  const property = result.property;
+  const siteUrl = process.env.SITE_URL?.replace(/\/$/, "");
+  const propertyUrl = siteUrl
+    ? `${siteUrl}/properties/${encodeURIComponent(property.id)}`
+    : undefined;
+  const description =
+    property.description ?? `Découvrez ${property.title} sur Kasa.`;
+
   return {
-    title: `${result.property.title} | Kasa`,
-    description: result.property.description ?? `Découvrez ${result.property.title} sur Kasa.`,
+    title: `${property.title} | Kasa`,
+    description,
+    ...(propertyUrl && {
+      alternates: { canonical: propertyUrl },
+    }),
+    openGraph: {
+      title: property.title,
+      description,
+      type: "website",
+      ...(propertyUrl && { url: propertyUrl }),
+      ...(property.cover && {
+        images: [{ url: property.cover, alt: `Photo de ${property.title}` }],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: property.title,
+      description,
+      ...(property.cover && { images: [property.cover] }),
+    },
   };
 }
 
@@ -48,8 +74,43 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
 
   if (result.state === "not-found") notFound();
 
+  const jsonLd =
+    result.state === "success"
+      ? JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Accommodation",
+          name: result.property.title,
+          description: result.property.description,
+          image: [
+            result.property.cover,
+            ...result.property.pictures,
+          ].filter(Boolean),
+          address: result.property.location
+            ? { "@type": "PostalAddress", addressLocality: result.property.location }
+            : undefined,
+          offers: {
+            "@type": "Offer",
+            price: result.property.price_per_night,
+            priceCurrency: "EUR",
+          },
+          aggregateRating: result.property.ratings_count > 0
+            ? {
+                "@type": "AggregateRating",
+                ratingValue: result.property.rating_avg,
+                ratingCount: result.property.ratings_count,
+              }
+            : undefined,
+        }).replace(/[<>&]/g, (character) => ({ "<": "\\u003c", ">": "\\u003e", "&": "\\u0026" })[character] ?? character)
+      : null;
+
   return (
     <main className="container-app flex-1 py-section">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd }}
+        />
+      )}
       <Link
         href="/"
         className="mb-component inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-light-grey px-4 text-sm text-neutral-dark-grey transition-colors hover:text-brand-main-red"
