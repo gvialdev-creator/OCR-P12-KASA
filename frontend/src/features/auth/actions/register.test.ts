@@ -25,10 +25,14 @@ describe("registerAction", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it.each([
-    ["", "Marie", "marie@example.com", "secret1"],
-    ["Dupont", " ", "marie@example.com", "secret1"],
-    ["Dupont", "Marie", "invalid", "secret1"],
+    ["", "Marie", "marie@example.com", "GoodPass1!"],
+    ["Dupont", " ", "marie@example.com", "GoodPass1!"],
+    ["Dupont", "Marie", "invalid", "GoodPass1!"],
     ["Dupont", "Marie", "marie@example.com", "short"],
+    ["Dupont", "Marie", "marie@example.com", "lowercase1!"],
+    ["Dupont", "Marie", "marie@example.com", "UPPERCASE1!"],
+    ["Dupont", "Marie", "marie@example.com", "NoDigits!"],
+    ["Dupont", "Marie", "marie@example.com", "NoSymbol1"],
   ])("rejects invalid input without calling the API", async (familyName, givenName, email, password) => {
     const result = await registerAction({ error: null }, details(familyName, givenName, email, password));
     expect(result.error).toBeTruthy();
@@ -38,15 +42,15 @@ describe("registerAction", () => {
 
   it("returns an API error without redirecting", async () => {
     registerMock.mockRejectedValue(new ApiError("Un compte avec ces informations existe déjà.", 409));
-    const result = await registerAction({ error: null }, details("Dupont", "Marie", "marie@example.com", "secret1"));
+    const result = await registerAction({ error: null }, details("Dupont", "Marie", "marie@example.com", "GoodPass1!"));
     expect(result.error).toMatch(/existe déjà/);
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it("redirects to login without setting a session cookie on success", async () => {
     registerMock.mockResolvedValue(undefined);
-    await registerAction({ error: null }, details(" Dupont ", " Marie ", " marie@example.com ", "secret1"));
-    expect(registerMock).toHaveBeenCalledWith("Marie Dupont", "marie@example.com", "secret1");
+    await registerAction({ error: null }, details(" Dupont ", " Marie ", " marie@example.com ", "GoodPass1!"));
+    expect(registerMock).toHaveBeenCalledWith("Marie Dupont", "marie@example.com", "GoodPass1!");
     expect(cookiesMock).not.toHaveBeenCalled();
     expect(redirectMock).toHaveBeenCalledWith("/login?registered=1");
   });

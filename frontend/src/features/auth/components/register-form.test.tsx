@@ -16,7 +16,9 @@ describe("RegisterForm", () => {
     expect(screen.getByRole("textbox", { name: "Nom" })).toHaveAttribute("autocomplete", "family-name");
     expect(screen.getByRole("textbox", { name: "Prénom" })).toHaveAttribute("autocomplete", "given-name");
     expect(screen.getByRole("textbox", { name: "Adresse email" })).toHaveAttribute("type", "email");
-    expect(screen.getByLabelText("Mot de passe")).toHaveAttribute("minlength", "6");
+    expect(screen.getByLabelText("Mot de passe")).toHaveAttribute("minlength", "8");
+    expect(screen.getByLabelText("Mot de passe")).toHaveAttribute("pattern");
+    expect(screen.getByText(/8 caractères minimum.*majuscule.*minuscule.*chiffre.*symbole/)).toBeInTheDocument();
     expect(screen.getByLabelText("Mot de passe")).toHaveAttribute("autocomplete", "new-password");
     expect(screen.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", "/login");
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
@@ -30,7 +32,7 @@ describe("RegisterForm", () => {
     await user.type(screen.getByRole("textbox", { name: "Nom" }), "Dupont");
     await user.type(screen.getByRole("textbox", { name: "Prénom" }), "Marie");
     await user.type(screen.getByRole("textbox", { name: "Adresse email" }), "marie@example.com");
-    await user.type(screen.getByLabelText("Mot de passe"), "secret1");
+    await user.type(screen.getByLabelText("Mot de passe"), "GoodPass1!");
     await user.click(screen.getByRole("button", { name: "S'inscrire" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Un compte avec ces informations existe déjà.");

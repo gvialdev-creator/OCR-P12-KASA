@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { ApiError } from "@/api/errors";
 import { loginWithApi } from "@/features/auth/services/login";
+import { isValidEmail } from "@/features/auth/validation";
 
 export interface LoginState {
   error: string | null;
@@ -18,7 +19,7 @@ export async function loginAction(
   const password = formData.get("password");
   const email = typeof emailValue === "string" ? emailValue.trim() : "";
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== "string" || !password) {
+  if (!isValidEmail(email) || typeof password !== "string" || !password) {
     return { error: "Saisissez une adresse email valide et un mot de passe." };
   }
 

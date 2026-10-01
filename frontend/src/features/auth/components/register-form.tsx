@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { registerAction, type RegisterState } from "@/features/auth/actions/register";
+import { passwordPattern } from "@/features/auth/validation";
 
 const initialState: RegisterState = { error: null };
 const inputClassName = "h-9 w-full rounded-sm border border-neutral-light-grey bg-neutral-white px-3 text-sm text-neutral-black focus-visible:outline-2 focus-visible:outline-brand-main-red";
@@ -45,7 +46,8 @@ export function RegisterForm() {
       </div>
       <div>
         <label htmlFor="register-password" className="mb-1 block text-sm text-neutral-black">Mot de passe</label>
-        <input id="register-password" name="password" type="password" autoComplete="new-password" minLength={6} required className={inputClassName} {...errorProps} />
+        <input id="register-password" name="password" type="password" autoComplete="new-password" minLength={8} pattern={passwordPattern} title="8 caractères minimum, avec majuscule, minuscule, chiffre et symbole" aria-describedby={state.error ? "password-help register-error" : "password-help"} required className={inputClassName} aria-invalid={Boolean(state.error)} />
+        <p id="password-help" className="mt-1 text-xs text-neutral-dark-grey">8 caractères minimum, avec majuscule, minuscule, chiffre et symbole.</p>
       </div>
       {state.error && (
         <p id="register-error" role="alert" className="text-sm text-brand-main-red">

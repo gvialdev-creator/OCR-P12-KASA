@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { ApiError } from "@/api/errors";
 import { registerWithApi } from "@/features/auth/services/register";
+import { isValidEmail, isValidNewPassword } from "@/features/auth/validation";
 
 export interface RegisterState {
   error: string | null;
@@ -21,8 +22,11 @@ export async function registerAction(
   const givenName = typeof givenNameValue === "string" ? givenNameValue.trim() : "";
   const email = typeof emailValue === "string" ? emailValue.trim() : "";
 
-  if (!familyName || !givenName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== "string" || password.length < 6) {
-    return { error: "Renseignez nom, prénom, adresse email valide et mot de passe d'au moins 6 caractères." };
+  if (!familyName || !givenName || !isValidEmail(email)) {
+    return { error: "Renseignez nom, prénom et une adresse email valide." };
+  }
+  if (typeof password !== "string" || !isValidNewPassword(password)) {
+    return { error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un symbole." };
   }
 
   try {
