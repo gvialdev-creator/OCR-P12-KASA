@@ -104,7 +104,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
       : null;
 
   return (
-    <main className="container-app flex-1 py-section">
+    <main className="container-app flex-1 py-section max-w-245">
       {jsonLd && (
         <script
           type="application/ld+json"

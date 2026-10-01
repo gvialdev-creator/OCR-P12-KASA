@@ -40,7 +40,7 @@ export function PropertyHostCard({ property }: PropertyHostCardProps) {
         </p>
         <span className="flex items-center gap-1 rounded-md bg-neutral-light-grey px-3 py-2 text-neutral-black">
           <StarIcon className="size-4 text-brand-main-red" />
-          {property.rating_avg.toFixed(1)}
+          {property.rating_avg.toFixed(0)}
         </span>
       </div>
 

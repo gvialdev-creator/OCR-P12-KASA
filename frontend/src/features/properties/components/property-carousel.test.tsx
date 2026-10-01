@@ -1,11 +1,19 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ImgHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PropertyCarousel } from "./property-carousel";
 
+type MockImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
+  src: string | { src: string };
+  alt: string;
+  fill?: boolean;
+  preload?: boolean;
+};
+
 vi.mock("next/image", () => ({
-  default: ({ src, alt, fill, preload, ...props }: any) => (
+  default: ({ src, alt, fill, preload, ...props }: MockImageProps) => (
     <img
       src={typeof src === "string" ? src : src?.src ?? ""}
       alt={alt}
@@ -45,6 +53,8 @@ describe("PropertyCarousel", () => {
     expect(
       screen.queryByRole("button", { name: /photo suivante/i }),
     ).not.toBeInTheDocument();
+
+    expect(screen.queryByRole("navigation", { name: /navigation entre les photos/i })).not.toBeInTheDocument();
   });
 
   it("renders a single image without navigation controls", () => {
@@ -65,6 +75,8 @@ describe("PropertyCarousel", () => {
     expect(
       screen.queryByRole("button", { name: /photo suivante/i }),
     ).not.toBeInTheDocument();
+
+    expect(screen.queryByRole("navigation", { name: /navigation entre les photos/i })).not.toBeInTheDocument();
   });
 
   it("renders thumbnails on the side when there are between 2 and 4 images", () => {
@@ -179,6 +191,27 @@ describe("PropertyCarousel", () => {
     ).toHaveAttribute("aria-current", "true");
   });
 
+  it("shows navigation dots for multiple images and selects the clicked photo", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PropertyCarousel
+        images={["/images/flat-1.jpg", "/images/flat-2.jpg", "/images/flat-3.jpg"]}
+        title="Appartement cosy"
+      />,
+    );
+
+    const dots = screen.getAllByRole("button", { name: /aller à la photo/i });
+    expect(dots).toHaveLength(3);
+    expect(dots[0]).toHaveAttribute("aria-current", "true");
+
+    await user.click(dots[2]);
+
+    expect(dots[2]).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: /afficher la photo 3/i })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: /reprendre le diaporama/i })).toBeInTheDocument();
+  });
+
   it("pauses and resumes the slideshow", async () => {
     const user = userEvent.setup();
 
@@ -208,5 +241,34 @@ describe("PropertyCarousel", () => {
     expect(
       screen.getByRole("button", { name: /mettre le diaporama en pause/i }),
     ).toBeInTheDocument();
+  });
+
+  it("advances after play is clicked while the gallery is hovered and focused", () => {
+    vi.useFakeTimers();
+
+    try {
+      render(
+        <PropertyCarousel
+          images={["/images/flat-1.jpg", "/images/flat-2.jpg"]}
+          title="Appartement cosy"
+        />,
+      );
+
+      const gallery = screen.getByRole("region", { name: /galerie photos/i });
+      const pauseButton = screen.getByRole("button", { name: /mettre le diaporama en pause/i });
+      fireEvent.mouseEnter(gallery);
+      fireEvent.focus(pauseButton);
+      fireEvent.click(pauseButton);
+
+      act(() => vi.advanceTimersByTime(5000));
+      expect(screen.getByRole("button", { name: /afficher la photo 1/i })).toHaveAttribute("aria-current", "true");
+
+      fireEvent.click(screen.getByRole("button", { name: /reprendre le diaporama/i }));
+      act(() => vi.advanceTimersByTime(5000));
+
+      expect(screen.getByRole("button", { name: /afficher la photo 2/i })).toHaveAttribute("aria-current", "true");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

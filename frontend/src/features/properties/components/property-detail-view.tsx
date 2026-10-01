@@ -14,7 +14,7 @@ export function PropertyDetailView({ property }: PropertyDetailViewProps) {
   );
 
   return (
-    <div className="grid items-start gap-component lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+    <div className="grid items-start gap-2.5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
       <div className="grid gap-component">
         <PropertyCarousel images={images} title={property.title} />
         <PropertyInformation property={property} />

@@ -59,7 +59,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={getButtonClassName(className, icon, iconOnly)}
+      className={getButtonClassName(className, icon, iconOnly) + ' cursor-pointer'}
       {...props}
     >
       <ButtonContent icon={icon} iconOnly={iconOnly}>
@@ -80,7 +80,7 @@ export function ButtonLink({
   return (
     <Link
       href={href}
-      className={getButtonClassName(className, icon, iconOnly)}
+      className={getButtonClassName(className, icon, iconOnly) + ' cursor-pointer'}
       {...props}
     >
       <ButtonContent icon={icon} iconOnly={iconOnly}>
