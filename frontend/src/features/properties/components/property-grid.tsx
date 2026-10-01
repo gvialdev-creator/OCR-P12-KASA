@@ -17,11 +17,10 @@ export function PropertyGrid({ properties }: PropertyGridProps) {
 
   return (
     <div className="grid gap-component sm:grid-cols-2 lg:grid-cols-3">
-      {properties.map((property, index) => (
+      {properties.map((property) => (
         <PropertyCard
           key={property.id}
           property={property}
-          preload={index < 3}
         />
       ))}
     </div>

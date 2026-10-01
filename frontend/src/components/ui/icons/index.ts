@@ -10,3 +10,4 @@ export { PinIcon } from "./pin-icon";
 export { PlayIcon } from "./play-icon";
 export { PlusIcon } from "./plus-icon";
 export { StarIcon } from "./star-icon";
+export { UserIcon } from "./user-icon";

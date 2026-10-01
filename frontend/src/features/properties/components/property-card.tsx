@@ -6,7 +6,6 @@ import type { Property } from "@/domain/types/property";
 
 interface PropertyCardProps {
   property: Property;
-  preload?: boolean;
 }
 
 const priceFormatter = new Intl.NumberFormat("fr-FR", {
@@ -17,7 +16,6 @@ const priceFormatter = new Intl.NumberFormat("fr-FR", {
 
 export function PropertyCard({
   property,
-  preload = false,
 }: PropertyCardProps) {
   const imageAlt = property.location
     ? `Photo de ${property.title}, ${property.location}`
@@ -32,7 +30,6 @@ export function PropertyCard({
               src={property.cover}
               alt={imageAlt}
               fill
-              preload={preload}
               sizes="(max-width: 639px) calc(100vw - 48px), (max-width: 1023px) calc(50vw - 32px), 368px"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />

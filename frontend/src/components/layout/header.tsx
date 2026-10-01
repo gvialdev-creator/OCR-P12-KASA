@@ -1,13 +1,17 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { ButtonLink } from "@/components/ui/button";
+import { DesktopUserMenu } from "@/components/layout/desktop-user-menu";
 import { Logo } from "@/components/ui/logo";
+import { MobileMenu } from "@/components/layout/mobile-menu";
+import { logoutAction } from "@/features/auth/actions/logout";
+import { hasValidSession } from "@/features/auth/services/has-valid-session";
 import {
-  CloseIcon,
   HeartIcon,
-  MenuBurgerIcon,
   MessageIcon,
   PlusIcon,
+  UserIcon,
 } from "@/components/ui/icons";
 
 const mainNavigation = [
@@ -15,10 +19,12 @@ const mainNavigation = [
   { label: "À propos", href: "/about" },
 ];
 
-export function Header() {
+export async function Header() {
+  const isLoggedIn = await hasValidSession((await cookies()).get("kasa_session")?.value);
+
   return (
     <header className="flex flex-col items-center justify-center md:mt-10">
-      <div className="text-neutral-black bg-neutral-white md:max-w-175 md:rounded-lg md:shadow-menu container-app flex h-16 items-center justify-between md:gap-7">
+      <div className="text-neutral-black bg-neutral-white md:max-w-200 md:rounded-lg md:shadow-menu container-app flex h-16 items-center justify-between md:gap-7">
         <nav
           className="hidden items-center gap-8 md:flex"
           aria-label="Navigation principale"
@@ -45,42 +51,48 @@ export function Header() {
           className="hidden items-center justify-end gap-5 md:flex"
           aria-label="Actions du compte"
         >
-          <Link
-            href="/properties/new"
-            className="flex items-center gap-1 text-sm text-brand-main-red transition-colors hover:text-brand-dark-orange"
-          >
-            <PlusIcon className="size-4" />
-            Ajouter un logement
-          </Link>
-          <Link
-            href="/favorites"
-            className="flex size-8 items-center justify-center text-xl leading-none text-brand-main-red transition-colors hover:text-brand-dark-orange"
-            aria-label="Favoris"
-            title="Favoris"
-          >
-            <HeartIcon className="size-4" />
-          </Link>
-          <Link
-            href="/messages"
-            className="group flex size-8 items-center justify-center text-brand-main-red transition-colors hover:text-brand-dark-orange"
-            aria-label="Messages"
-            title="Messages"
-          >
-            <MessageIcon className="size-4" />
-          </Link>
+          {isLoggedIn && (
+            <>
+              <Link
+                href="/properties/new"
+                className="flex items-center gap-1 text-sm text-brand-main-red transition-colors hover:text-brand-dark-orange"
+              >
+                <PlusIcon className="size-4" />
+                Ajouter un logement
+              </Link>
+              <Link
+                href="/favorites"
+                className="flex size-8 items-center justify-center text-xl leading-none text-brand-main-red transition-colors hover:text-brand-dark-orange"
+                aria-label="Favoris"
+                title="Favoris"
+              >
+                <HeartIcon className="size-4" />
+              </Link>
+              <Link
+                href="/messages"
+                className="group flex size-8 items-center justify-center text-brand-main-red transition-colors hover:text-brand-dark-orange"
+                aria-label="Messages"
+                title="Messages"
+              >
+                <MessageIcon className="size-4" />
+              </Link>
+            </>
+          )}
+          <DesktopUserMenu>
+              {isLoggedIn ? (
+                <>
+                  <Link href="/account" className="block rounded-sm px-3 py-2 text-sm text-neutral-black hover:bg-brand-light-orange focus-visible:outline-2 focus-visible:outline-brand-main-red">Mon compte</Link>
+                  <form action={logoutAction}>
+                    <button type="submit" className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-sm text-neutral-black hover:bg-brand-light-orange focus-visible:outline-2 focus-visible:outline-brand-main-red">Déconnexion</button>
+                  </form>
+                </>
+              ) : (
+                <Link href="/login" className="block rounded-sm px-3 py-2 text-sm text-neutral-black hover:bg-brand-light-orange focus-visible:outline-2 focus-visible:outline-brand-main-red">Connexion</Link>
+              )}
+          </DesktopUserMenu>
         </nav>
 
-        <details className="group md:hidden">
-          <summary className="flex size-10 cursor-pointer list-none items-center justify-center text-neutral-dark-grey marker:content-none">
-            <span className="sr-only group-open:hidden">Ouvrir le menu</span>
-            <span className="sr-only hidden group-open:inline">Fermer le menu</span>
-            <MenuBurgerIcon className="size-11 group-open:hidden" />
-            <CloseIcon className="hidden size-11 group-open:block" />
-          </summary>
-          <nav
-            className="absolute right-0 z-20 w-full h-[calc(100vh-4rem)] top-0 mt-16 pb-10 flex flex-col gap-1 bg-neutral-white"
-            aria-label="Navigation mobile"
-          >
+        <MobileMenu>
             {mainNavigation.map((item) => (
               <Link
                 key={item.href}
@@ -90,26 +102,48 @@ export function Header() {
                 {item.label}
               </Link>
             ))}                   
-            <Link
-              href="/messages"
-              className="rounded-sm px-3 py-7 text-2xl border-b border-neutral-light-grey hover:bg-brand-light-orange hover:text-brand-main-red"
-            >
-              Messagerie
-            </Link>
-             <Link
-              href="/favorites"
-              className="rounded-sm px-3 py-7 text-2xl hover:bg-brand-light-orange hover:text-brand-main-red"
-            >
-              Favoris
-            </Link>
-            <ButtonLink
-              href="/properties/new"
-              className="mt-3 self-start"
-            >
-              Ajouter un logement
-            </ButtonLink>
-          </nav>
-        </details>
+            {isLoggedIn && (
+              <>
+                <Link
+                  href="/messages"
+                  className="rounded-sm px-3 py-7 text-2xl border-b border-neutral-light-grey hover:bg-brand-light-orange hover:text-brand-main-red"
+                >
+                  Messagerie
+                </Link>
+                <Link
+                  href="/favorites"
+                  className="rounded-sm px-3 py-7 text-2xl hover:bg-brand-light-orange hover:text-brand-main-red"
+                >
+                  Favoris
+                </Link>
+              </>
+            )}
+            <details open className="border-t border-neutral-light-grey">
+              <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-7 text-2xl text-neutral-black hover:bg-brand-light-orange hover:text-brand-main-red focus-visible:outline-2 focus-visible:outline-brand-main-red">
+                <UserIcon className="size-6" /> Compte
+              </summary>
+              <div className="flex flex-col bg-brand-light-orange pl-6">
+                {isLoggedIn ? (
+                  <>
+                    <Link href="/account" className="px-3 py-4 text-lg text-neutral-black focus-visible:outline-2 focus-visible:outline-brand-main-red">Mon compte</Link>
+                    <form action={logoutAction}>
+                      <button type="submit" className="w-full cursor-pointer px-3 py-4 text-left text-lg text-neutral-black focus-visible:outline-2 focus-visible:outline-brand-main-red">Déconnexion</button>
+                    </form>
+                  </>
+                ) : (
+                  <Link href="/login" className="px-3 py-4 text-lg text-neutral-black focus-visible:outline-2 focus-visible:outline-brand-main-red">Connexion</Link>
+                )}
+              </div>
+            </details>
+            {isLoggedIn && (
+              <ButtonLink
+                href="/properties/new"
+                className="mt-3 self-start"
+              >
+                Ajouter un logement
+              </ButtonLink>
+            )}
+        </MobileMenu>
       </div>
     </header>
   );
