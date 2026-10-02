@@ -3,15 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/api/errors";
 import { createPropertyAction } from "./create-property";
 
-const { userMock, uploadMock, createMock, deleteMock, redirectMock, revalidateMock } = vi.hoisted(() => ({
-  userMock: vi.fn(), uploadMock: vi.fn(), createMock: vi.fn(), deleteMock: vi.fn(), redirectMock: vi.fn(), revalidateMock: vi.fn(),
+const { userMock, uploadMock, createMock, updateUserMock, deleteMock, redirectMock, revalidateMock } = vi.hoisted(() => ({
+  userMock: vi.fn(), uploadMock: vi.fn(), createMock: vi.fn(), updateUserMock: vi.fn(), deleteMock: vi.fn(), redirectMock: vi.fn(), revalidateMock: vi.fn(),
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: "token" }) }) }));
 vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidateMock }));
 vi.mock("@/features/auth/services/has-valid-session", () => ({ getSessionUser: userMock }));
 vi.mock("@/features/properties/services/create-property", () => ({
-  uploadPropertyImage: uploadMock, createProperty: createMock, deleteUploadedImages: deleteMock,
+  uploadPropertyImage: uploadMock, createProperty: createMock, updateUserProfile: updateUserMock, deleteUploadedImages: deleteMock,
 }));
 
 function validForm() {
@@ -36,6 +36,19 @@ describe("createPropertyAction", () => {
     expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ host_id: 3, postal_code: "06000", cover: "/uploads/cover.jpg", price_per_night: 90 }), "token");
     expect(revalidateMock).toHaveBeenCalledWith("/");
     expect(redirectMock).toHaveBeenCalledWith("/properties/new-id");
+  });
+
+  it("uploads and saves the host profile before creating the property", async () => {
+    const form = validForm();
+    const profilePicture = new File(["profile"], "profile.jpg", { type: "image/jpeg" });
+    form.set("host_name", "Hôte Kasa");
+    form.set("profile_picture", profilePicture);
+
+    await createPropertyAction({ error: null }, form);
+
+    expect(uploadMock).toHaveBeenNthCalledWith(1, profilePicture, "user-picture", "token");
+    expect(updateUserMock).toHaveBeenCalledWith(3, { name: "Hôte Kasa", picture: "/uploads/cover.jpg" }, "token");
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ host_id: 3 }), "token");
   });
 
   it("rejects invalid fields before uploading", async () => {

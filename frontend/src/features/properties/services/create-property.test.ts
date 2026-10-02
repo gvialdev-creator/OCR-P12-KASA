@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createProperty, uploadPropertyImage } from "./create-property";
+import { createProperty, updateUserProfile, uploadPropertyImage } from "./create-property";
 
 describe("property creation API", () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
@@ -27,6 +27,19 @@ describe("property creation API", () => {
     expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3001/api/properties"), {
       method: "POST", headers: { Authorization: "Bearer token", "Content-Type": "application/json" },
       body: JSON.stringify(payload), cache: "no-store",
+    });
+  });
+
+  it("updates the authenticated user's profile", async () => {
+    vi.stubEnv("API_BASE_URL", "http://localhost:3001");
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateUserProfile(3, { name: "Hôte Kasa", picture: "/uploads/profile.jpg" }, "token");
+
+    expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3001/api/users/3"), {
+      method: "PATCH", headers: { Authorization: "Bearer token", "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Hôte Kasa", picture: "/uploads/profile.jpg" }), cache: "no-store",
     });
   });
 });

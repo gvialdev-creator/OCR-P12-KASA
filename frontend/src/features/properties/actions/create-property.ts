@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 import { ApiError } from "@/api/errors";
 import { getSessionUser } from "@/features/auth/services/has-valid-session";
-import { createProperty, deleteUploadedImages, uploadPropertyImage } from "@/features/properties/services/create-property";
+import { createProperty, deleteUploadedImages, updateUserProfile, uploadPropertyImage } from "@/features/properties/services/create-property";
 
 export interface CreatePropertyState { error: string | null }
 
@@ -20,6 +20,8 @@ export async function createPropertyAction(_state: CreatePropertyState, formData
   const location = String(formData.get("location") ?? "").trim();
   const postalCode = String(formData.get("postal_code") ?? "").trim();
   const price = Number(formData.get("price_per_night"));
+  const hostName = String(formData.get("host_name") ?? "").trim();
+  const profilePicture = formData.get("profile_picture");
   const cover = formData.get("cover");
   const pictures = formData.getAll("pictures").filter((file): file is File => file instanceof File && file.size > 0);
   const files = [cover, ...pictures];
@@ -29,11 +31,28 @@ export async function createPropertyAction(_state: CreatePropertyState, formData
   if (!(cover instanceof File) || !cover.size || pictures.length > 8 || files.some((file) => !(file instanceof File) || !file.type.startsWith("image/") || file.size > 10 * 1024 * 1024)) {
     return { error: "Choisissez une couverture et jusqu'à 8 photos, au format image (10 Mo maximum chacune)." };
   }
+  if (profilePicture && (!(profilePicture instanceof File) || !profilePicture.size || !profilePicture.type.startsWith("image/") || profilePicture.size > 10 * 1024 * 1024)) {
+    return { error: "La photo de profil doit être une image de 10 Mo maximum." };
+  }
   const equipments = formData.getAll("equipments").filter((value): value is string => typeof value === "string" && value.length < 80);
   const tags = formData.getAll("tags").filter((value): value is string => typeof value === "string" && value.length < 80);
   const customTag = String(formData.get("customTag") ?? "").trim();
   if (customTag.length > 80) return { error: "La catégorie personnalisée est trop longue." };
   if (customTag) tags.push(customTag);
+
+  if (hostName || profilePicture instanceof File) {
+    let uploadedProfilePicture: string | null = null;
+    try {
+      if (profilePicture instanceof File) uploadedProfilePicture = await uploadPropertyImage(profilePicture, "user-picture", token);
+      await updateUserProfile(user.id, {
+        ...(hostName ? { name: hostName } : {}),
+        ...(uploadedProfilePicture ? { picture: uploadedProfilePicture } : {}),
+      }, token);
+    } catch {
+      if (uploadedProfilePicture) await deleteUploadedImages([uploadedProfilePicture], token);
+      return { error: "Le profil de l’hôte n’a pas pu être mis à jour. Vérifiez l’image ou réessayez." };
+    }
+  }
 
   const uploaded: string[] = [];
   let id: string;
