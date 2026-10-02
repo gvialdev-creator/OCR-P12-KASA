@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  experimental: {
+    serverActions: { bodySizeLimit: "100mb" },
+  },
+  async rewrites() {
+    return process.env.API_BASE_URL
+      ? [{ source: "/uploads/:path*", destination: `${process.env.API_BASE_URL.replace(/\/$/, "")}/uploads/:path*` }]
+      : [];
+  },
   images: {
     remotePatterns: [
       {

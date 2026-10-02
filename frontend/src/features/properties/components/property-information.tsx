@@ -33,7 +33,7 @@ export function PropertyInformation({ property }: PropertyInformationProps) {
       </h1>
       <p className="mt-4 flex items-center gap-2 text-sm text-neutral-dark-grey">
         <PinIcon className="size-4 shrink-0" />
-        {property.location ?? "Localisation non renseignée"}
+        {[property.postal_code, property.location].filter(Boolean).join(" ") || "Localisation non renseignée"}
       </p>
 
       <p className="mt-10 leading-7 text-neutral-black">

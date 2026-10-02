@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { hasValidSession } from "./has-valid-session";
+import { getSessionUser, hasValidSession } from "./has-valid-session";
 
 const token = `header.${Buffer.from(JSON.stringify({ id: 42 })).toString("base64url")}.signature`;
 
@@ -22,14 +22,21 @@ describe("hasValidSession", () => {
 
   it("asks the backend to validate the session before redirecting", async () => {
     vi.stubEnv("API_BASE_URL", "http://localhost:3001");
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 42, role: "owner" }) });
     vi.stubGlobal("fetch", fetchMock);
 
     expect(await hasValidSession(token)).toBe(true);
+    expect(await getSessionUser(token)).toEqual({ id: 42, role: "owner" });
     expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3001/api/users/42"), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
+  });
+
+  it("rejects a mismatched user response", async () => {
+    vi.stubEnv("API_BASE_URL", "http://localhost:3001");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 7, role: "admin" }) }));
+    expect(await getSessionUser(token)).toBeNull();
   });
 
   it("does not redirect when the backend rejects the token or is unavailable", async () => {

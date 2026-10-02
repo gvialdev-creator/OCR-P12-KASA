@@ -6,7 +6,7 @@ import { DesktopUserMenu } from "@/components/layout/desktop-user-menu";
 import { Logo } from "@/components/ui/logo";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { logoutAction } from "@/features/auth/actions/logout";
-import { hasValidSession } from "@/features/auth/services/has-valid-session";
+import { getSessionUser } from "@/features/auth/services/has-valid-session";
 import {
   HeartIcon,
   MessageIcon,
@@ -20,7 +20,9 @@ const mainNavigation = [
 ];
 
 export async function Header() {
-  const isLoggedIn = await hasValidSession((await cookies()).get("kasa_session")?.value);
+  const sessionUser = await getSessionUser((await cookies()).get("kasa_session")?.value);
+  const isLoggedIn = sessionUser !== null;
+  const canPublish = sessionUser?.role === "owner" || sessionUser?.role === "admin";
 
   return (
     <header className="flex flex-col items-center justify-center md:mt-10">
@@ -53,13 +55,13 @@ export async function Header() {
         >
           {isLoggedIn && (
             <>
-              <Link
+              {canPublish && <Link
                 href="/properties/new"
                 className="flex items-center gap-1 text-sm text-brand-main-red transition-colors hover:text-brand-dark-orange"
               >
                 <PlusIcon className="size-4" />
                 Ajouter un logement
-              </Link>
+              </Link>}
               <Link
                 href="/favorites"
                 className="flex size-8 items-center justify-center text-xl leading-none text-brand-main-red transition-colors hover:text-brand-dark-orange"
@@ -135,7 +137,7 @@ export async function Header() {
                 )}
               </div>
             </details>
-            {isLoggedIn && (
+            {canPublish && (
               <ButtonLink
                 href="/properties/new"
                 className="mt-3 self-start"

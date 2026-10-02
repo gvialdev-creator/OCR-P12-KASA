@@ -11,6 +11,7 @@ export interface Property {
   description: string | null;
   cover: string | null;
   location: string | null;
+  postal_code: string | null;
   price_per_night: number;
   rating_avg: number;
   ratings_count: number;

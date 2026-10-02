@@ -4,16 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Header } from "./header";
 
-const { getCookie, hasValidSessionMock } = vi.hoisted(() => ({
+const { getCookie, getSessionUserMock } = vi.hoisted(() => ({
   getCookie: vi.fn(),
-  hasValidSessionMock: vi.fn(),
+  getSessionUserMock: vi.fn(),
 }));
 
 let currentPathname = "/about";
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: getCookie }) }));
 vi.mock("next/navigation", () => ({ usePathname: () => currentPathname }));
-vi.mock("@/features/auth/services/has-valid-session", () => ({ hasValidSession: hasValidSessionMock }));
+vi.mock("@/features/auth/services/has-valid-session", () => ({ getSessionUser: getSessionUserMock }));
 vi.mock("@/features/auth/actions/logout", () => ({ logoutAction: vi.fn() }));
 
 describe("Header user menu", () => {
@@ -22,7 +22,7 @@ describe("Header user menu", () => {
   });
 
   it("offers login but no account or logout to a guest", async () => {
-    hasValidSessionMock.mockResolvedValue(false);
+    getSessionUserMock.mockResolvedValue(null);
     render(await Header());
 
     const actions = screen.getByRole("navigation", { name: "Actions du compte" });
@@ -41,10 +41,10 @@ describe("Header user menu", () => {
 
   it("offers account and logout but no login to a signed-in user", async () => {
     getCookie.mockReturnValue({ value: "token" });
-    hasValidSessionMock.mockResolvedValue(true);
+    getSessionUserMock.mockResolvedValue({ id: 42, role: "owner" });
     render(await Header());
 
-    expect(hasValidSessionMock).toHaveBeenCalledWith("token");
+    expect(getSessionUserMock).toHaveBeenCalledWith("token");
     const actions = screen.getByRole("navigation", { name: "Actions du compte" });
     expect(within(actions).getByRole("link", { name: "Mon compte" })).toHaveAttribute("href", "/account");
     expect(within(actions).getByRole("button", { name: "Déconnexion" })).toBeInTheDocument();
@@ -59,8 +59,16 @@ describe("Header user menu", () => {
     }
   });
 
+  it("does not offer publication to a signed-in client", async () => {
+    getCookie.mockReturnValue({ value: "token" });
+    getSessionUserMock.mockResolvedValue({ id: 42, role: "client" });
+    render(await Header());
+    expect(screen.getAllByRole("link", { name: "Favoris" })).toHaveLength(2);
+    expect(screen.queryByRole("link", { name: "Ajouter un logement" })).not.toBeInTheDocument();
+  });
+
   it("closes the mobile menu after navigation, including links in Compte", async () => {
-    hasValidSessionMock.mockResolvedValue(false);
+    getSessionUserMock.mockResolvedValue(null);
     const user = userEvent.setup();
     currentPathname = "/about";
     const { rerender } = render(await Header());
@@ -90,7 +98,7 @@ describe("Header user menu", () => {
   });
 
   it("closes the mobile menu for a link to the current page", async () => {
-    hasValidSessionMock.mockResolvedValue(false);
+    getSessionUserMock.mockResolvedValue(null);
     currentPathname = "/about";
     const user = userEvent.setup();
     render(await Header());
@@ -106,7 +114,7 @@ describe("Header user menu", () => {
   });
 
   it("closes the desktop user menu on an outside click or a menu link", async () => {
-    hasValidSessionMock.mockResolvedValue(false);
+    getSessionUserMock.mockResolvedValue(null);
     const user = userEvent.setup();
     render(await Header());
 
@@ -129,7 +137,7 @@ describe("Header user menu", () => {
 
   it("keeps the desktop menu open on internal clicks and closes it on account actions", async () => {
     getCookie.mockReturnValue({ value: "token" });
-    hasValidSessionMock.mockResolvedValue(true);
+    getSessionUserMock.mockResolvedValue({ id: 42, role: "owner" });
     const user = userEvent.setup();
     render(await Header());
 
