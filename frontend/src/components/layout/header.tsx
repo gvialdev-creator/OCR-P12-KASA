@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { DesktopUserMenu } from "@/components/layout/desktop-user-menu";
 import { Logo } from "@/components/ui/logo";
 import { MobileMenu } from "@/components/layout/mobile-menu";
+import { OwnerRequestDialog } from "@/features/owner-requests/components/owner-request-dialog";
 import { logoutAction } from "@/features/auth/actions/logout";
 import { getSessionUser } from "@/features/auth/services/has-valid-session";
 import {
@@ -23,6 +24,7 @@ export async function Header() {
   const sessionUser = await getSessionUser((await cookies()).get("kasa_session")?.value);
   const isLoggedIn = sessionUser !== null;
   const canPublish = sessionUser?.role === "owner" || sessionUser?.role === "admin";
+  const isAdmin = sessionUser?.role === "admin";
 
   return (
     <header className="flex flex-col items-center justify-center md:mt-10">
@@ -55,13 +57,13 @@ export async function Header() {
         >
           {isLoggedIn && (
             <>
-              {canPublish && <Link
+              {canPublish ? <Link
                 href="/properties/new"
                 className="flex items-center gap-1 text-sm text-brand-main-red transition-colors hover:text-brand-dark-orange"
               >
                 <PlusIcon className="size-4" />
                 Ajouter un logement
-              </Link>}
+              </Link> : <OwnerRequestDialog />}
               <Link
                 href="/favorites"
                 className="flex size-8 items-center justify-center text-xl leading-none text-brand-main-red transition-colors hover:text-brand-dark-orange"
@@ -84,6 +86,7 @@ export async function Header() {
               {isLoggedIn ? (
                 <>
                   <Link href="/account" className="block rounded-sm px-3 py-2 text-sm text-neutral-black hover:bg-brand-light-orange focus-visible:outline-2 focus-visible:outline-brand-main-red">Mon compte</Link>
+                  {isAdmin && <Link href="/admin" className="block rounded-sm px-3 py-2 text-sm text-neutral-black hover:bg-brand-light-orange focus-visible:outline-2 focus-visible:outline-brand-main-red">Tableau de bord admin</Link>}
                   <form action={logoutAction}>
                     <button type="submit" className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-sm text-neutral-black hover:bg-brand-light-orange focus-visible:outline-2 focus-visible:outline-brand-main-red">Déconnexion</button>
                   </form>
@@ -128,6 +131,7 @@ export async function Header() {
                 {isLoggedIn ? (
                   <>
                     <Link href="/account" className="px-3 py-4 text-lg text-neutral-black focus-visible:outline-2 focus-visible:outline-brand-main-red">Mon compte</Link>
+                    {isAdmin && <Link href="/admin" className="px-3 py-4 text-lg text-neutral-black focus-visible:outline-2 focus-visible:outline-brand-main-red">Tableau de bord admin</Link>}
                     <form action={logoutAction}>
                       <button type="submit" className="w-full cursor-pointer px-3 py-4 text-left text-lg text-neutral-black focus-visible:outline-2 focus-visible:outline-brand-main-red">Déconnexion</button>
                     </form>
@@ -145,6 +149,7 @@ export async function Header() {
                 Ajouter un logement
               </ButtonLink>
             )}
+            {isLoggedIn && !canPublish && <OwnerRequestDialog mobile />}
         </MobileMenu>
       </div>
     </header>

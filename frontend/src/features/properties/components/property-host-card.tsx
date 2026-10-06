@@ -45,8 +45,8 @@ export function PropertyHostCard({ property }: PropertyHostCardProps) {
       </div>
 
       <div className="mt-8 grid gap-2">
-        <Button className="w-full">Contacter l’hôte</Button>
-        <Button className="w-full">Envoyer un message</Button>
+        <Button className="w-full text-neutral-white">Contacter l’hôte</Button>
+        <Button className="w-full text-neutral-white">Envoyer un message</Button>
       </div>
     </aside>
   );

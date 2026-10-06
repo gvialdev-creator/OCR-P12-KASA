@@ -1,5 +1,6 @@
 export { ArrowLeftIcon } from "./arrow-left-icon";
 export { ArrowUpIcon } from "./arrow-up-icon";
+export { CircleQuestionIcon } from "./circle-question-icon";
 export { CloseIcon } from "./close-icon";
 export { DeleteIcon } from "./delete-icon";
 export { HeartIcon } from "./heart-icon";

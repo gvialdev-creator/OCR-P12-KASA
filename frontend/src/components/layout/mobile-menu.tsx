@@ -13,6 +13,14 @@ export function MobileMenu({ children }: { children: ReactNode }) {
     if (menuRef.current) menuRef.current.open = false;
   }, [pathname]);
 
+  useEffect(() => {
+    function closeMenu() {
+      if (menuRef.current) menuRef.current.open = false;
+    }
+    document.addEventListener("kasa:close-mobile-menu", closeMenu);
+    return () => document.removeEventListener("kasa:close-mobile-menu", closeMenu);
+  }, []);
+
   return (
     <details ref={menuRef} className="group md:hidden">
       <summary className="flex size-10 cursor-pointer list-none items-center justify-center text-neutral-dark-grey marker:content-none">
@@ -26,6 +34,8 @@ export function MobileMenu({ children }: { children: ReactNode }) {
         aria-label="Navigation mobile"
         onClick={(event) => {
           const link = (event.target as Element).closest<HTMLAnchorElement>("a[href]");
+          const dialogTrigger = (event.target as Element).closest("[data-open-owner-dialog]");
+          if (dialogTrigger && menuRef.current) menuRef.current.open = false;
           if (link && new URL(link.href).pathname === pathname && menuRef.current) {
             menuRef.current.open = false;
           }

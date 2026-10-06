@@ -47,6 +47,7 @@ describe("Header user menu", () => {
     expect(getSessionUserMock).toHaveBeenCalledWith("token");
     const actions = screen.getByRole("navigation", { name: "Actions du compte" });
     expect(within(actions).getByRole("link", { name: "Mon compte" })).toHaveAttribute("href", "/account");
+    expect(within(actions).queryByRole("link", { name: "Tableau de bord admin" })).not.toBeInTheDocument();
     expect(within(actions).getByRole("button", { name: "Déconnexion" })).toBeInTheDocument();
     expect(within(actions).queryByRole("link", { name: "Connexion" })).not.toBeInTheDocument();
     const mobile = screen.getByRole("navigation", { name: "Navigation mobile" });
@@ -65,6 +66,20 @@ describe("Header user menu", () => {
     render(await Header());
     expect(screen.getAllByRole("link", { name: "Favoris" })).toHaveLength(2);
     expect(screen.queryByRole("link", { name: "Ajouter un logement" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Ajouter un logement" })).toHaveLength(2);
+  });
+
+  it("offers the admin dashboard but not the owner request review page in the header", async () => {
+    getCookie.mockReturnValue({ value: "token" });
+    getSessionUserMock.mockResolvedValue({ id: 42, role: "admin" });
+    render(await Header());
+
+    expect(screen.queryByRole("link", { name: "Demandes propriétaire" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Tableau de bord admin" })).toHaveLength(2);
+    for (const link of screen.getAllByRole("link", { name: "Tableau de bord admin" })) {
+      expect(link).toHaveAttribute("href", "/admin");
+    }
+    expect(screen.getAllByRole("link", { name: "Ajouter un logement" })).toHaveLength(2);
   });
 
   it("closes the mobile menu after navigation, including links in Compte", async () => {
