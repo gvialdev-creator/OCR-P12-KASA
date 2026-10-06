@@ -29,9 +29,14 @@ export function PropertyHostCard({ property }: PropertyHostCardProps) {
               className="object-cover object-center"
             />
           ) : (
-            <span className="flex h-full items-center justify-center text-2xl font-medium text-neutral-dark-grey">
-              {host?.name.charAt(0) ?? "?"}
-            </span>
+            <Image
+              src="/images/Portrait_Placeholder.png"
+              alt={`Portrait de ${host?.name ?? "l’hôte"}`}
+              fill
+              loading="eager"
+              sizes="80px"
+              className="object-cover object-center"
+            />
           )}
         </div>
 
