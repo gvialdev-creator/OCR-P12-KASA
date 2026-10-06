@@ -7,7 +7,9 @@ const { userMock, redirectMock, notFoundMock } = vi.hoisted(() => ({ userMock: v
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: "token" }) }) }));
 vi.mock("next/navigation", () => ({ redirect: redirectMock, notFound: notFoundMock }));
 vi.mock("@/features/auth/services/has-valid-session", () => ({ getSessionUser: userMock }));
-vi.mock("@/features/properties/components/create-property-form", () => ({ CreatePropertyForm: () => <h1>Ajouter une propriété</h1> }));
+vi.mock("@/features/properties/components/create-property-form", () => ({
+  CreatePropertyForm: ({ hostName, hostPicture }: { hostName: string; hostPicture: string | null }) => <><h1>Ajouter une propriété</h1><p>{hostName} {hostPicture}</p></>,
+}));
 
 describe("NewPropertyPage", () => {
   beforeEach(() => { vi.clearAllMocks(); redirectMock.mockImplementation(() => { throw new Error("redirect"); }); notFoundMock.mockImplementation(() => { throw new Error("notFound"); }); });
@@ -21,8 +23,9 @@ describe("NewPropertyPage", () => {
     await expect(NewPropertyPage()).rejects.toThrow("notFound");
   });
   it("renders for owners", async () => {
-    userMock.mockResolvedValue({ id: 1, role: "owner" });
+    userMock.mockResolvedValue({ id: 1, role: "owner", name: "Hôte Kasa", picture: "/uploads/host.jpg" });
     render(await NewPropertyPage());
     expect(screen.getByRole("heading", { name: "Ajouter une propriété" })).toBeInTheDocument();
+    expect(screen.getByText("Hôte Kasa /uploads/host.jpg")).toBeInTheDocument();
   });
 });

@@ -43,19 +43,6 @@ export async function createProperty(payload: Record<string, unknown>, token: st
   return result.id;
 }
 
-export async function updateUserProfile(userId: number, changes: { name?: string; picture?: string }, token: string): Promise<void> {
-  let response: Response;
-  try {
-    response = await fetch(apiUrl(`/api/users/${userId}`), {
-      method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(changes), cache: "no-store",
-    });
-  } catch {
-    throw new ApiError("Impossible de mettre à jour le profil de l’hôte.");
-  }
-  if (!response.ok) throw new ApiError("Impossible de mettre à jour le profil de l’hôte.", response.status);
-}
-
 export async function deleteUploadedImages(urls: string[], token: string): Promise<void> {
   if (!urls.length) return;
   try {

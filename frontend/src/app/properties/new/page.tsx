@@ -13,5 +13,5 @@ export default async function NewPropertyPage() {
   if (!user) redirect("/login");
   if (user.role !== "owner" && user.role !== "admin") notFound();
 
-  return <main className="container-app flex-1 py-section"><CreatePropertyForm /></main>;
+  return <main className="container-app flex-1 py-section"><CreatePropertyForm hostName={user.name} hostPicture={user.picture} /></main>;
 }

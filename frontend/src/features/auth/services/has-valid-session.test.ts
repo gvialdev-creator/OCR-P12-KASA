@@ -22,15 +22,22 @@ describe("hasValidSession", () => {
 
   it("asks the backend to validate the session before redirecting", async () => {
     vi.stubEnv("API_BASE_URL", "http://localhost:3001");
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 42, role: "owner" }) });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 42, role: "owner", name: "Hôte Kasa", picture: "/uploads/host.jpg" }) });
     vi.stubGlobal("fetch", fetchMock);
 
     expect(await hasValidSession(token)).toBe(true);
-    expect(await getSessionUser(token)).toEqual({ id: 42, role: "owner" });
+    expect(await getSessionUser(token)).toEqual({ id: 42, role: "owner", name: "Hôte Kasa", picture: "/uploads/host.jpg" });
     expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3001/api/users/42"), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
+  });
+
+  it("accepts a user without a profile picture", async () => {
+    vi.stubEnv("API_BASE_URL", "http://localhost:3001");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 42, role: "owner", name: "Hôte Kasa", picture: null }) }));
+
+    expect(await getSessionUser(token)).toEqual({ id: 42, role: "owner", name: "Hôte Kasa", picture: null });
   });
 
   it("rejects a mismatched user response", async () => {

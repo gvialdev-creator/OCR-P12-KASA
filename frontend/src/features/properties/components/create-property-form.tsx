@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@/components/ui/icons";
@@ -28,10 +28,10 @@ function ImagePreview({ file, label, className = "h-19 w-25" }: { file: File; la
   return preview?.file === file ? <Image src={preview.url} alt={label} width={100} height={76} unoptimized className={`${className} rounded-sm object-cover`} /> : null;
 }
 
-function ImageUploadField({ id, label, file, onChange, ariaRequired = false, previewLabel, inputRef }: { id: string; label: string; file: File | null; onChange: (file: File | null) => void; ariaRequired?: boolean; previewLabel?: string; inputRef?: React.RefObject<HTMLInputElement | null> }) {
+function ImageUploadField({ id, label, file, onChange, ariaRequired = false, previewLabel }: { id: string; label: string; file: File | null; onChange: (file: File | null) => void; ariaRequired?: boolean; previewLabel?: string }) {
   return (
     <div className="flex h-6 min-w-0 flex-1 items-center gap-1 focus-within:outline-2 focus-within:outline-brand-main-red">
-      <input ref={inputRef} id={id} type="file" accept="image/*" aria-required={ariaRequired || undefined} className="sr-only" onChange={(event) => { onChange(event.target.files?.[0] ?? null); event.target.value = ""; }} />
+      <input id={id} type="file" accept="image/*" aria-required={ariaRequired || undefined} className="sr-only" onChange={(event) => { onChange(event.target.files?.[0] ?? null); event.target.value = ""; }} />
       <label htmlFor={id} className="flex h-6 min-w-0 flex-1 cursor-pointer items-center gap-1 overflow-hidden rounded-sm border border-neutral-light-grey bg-neutral-white px-2 text-xs text-neutral-dark-grey">
         <span className="sr-only">{label}</span>
         {file && <ImagePreview file={file} label={previewLabel ?? `Aperçu de ${label}`} className="size-5 shrink-0" />}
@@ -42,20 +42,17 @@ function ImageUploadField({ id, label, file, onChange, ariaRequired = false, pre
   );
 }
 
-export function CreatePropertyForm() {
-  const [fields, setFields] = useState({ title: "", description: "", postal_code: "", location: "", price_per_night: "", hostName: "" });
+export function CreatePropertyForm({ hostName, hostPicture }: { hostName: string; hostPicture: string | null }) {
+  const [fields, setFields] = useState({ title: "", description: "", postal_code: "", location: "", price_per_night: "" });
   const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [cover, setCover] = useState<File | null>(null);
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
-  const profilePictureInputRef = useRef<HTMLInputElement>(null);
   const [pictureFields, setPictureFields] = useState<{ id: number; file: File | null }[]>([{ id: 0, file: null }]);
   const [nextPictureId, setNextPictureId] = useState(1);
   const [customTagFields, setCustomTagFields] = useState<{ id: number; value: string }[]>([{ id: 0, value: "" }]);
   const [nextCustomTagId, setNextCustomTagId] = useState(1);
   const [state, formAction, pending] = useActionState(async (previous: { error: string | null }, formData: FormData) => {
     if (cover) formData.set("cover", cover);
-    if (profilePicture) formData.set("profile_picture", profilePicture);
     pictureFields.forEach(({ file }) => { if (file) formData.append("pictures", file); });
     return createPropertyAction(previous, formData);
   }, { error: null });
@@ -125,11 +122,10 @@ export function CreatePropertyForm() {
           </div>
         </section>
         <section aria-label="Informations de l’hôte" className="space-y-5 rounded-md border border-neutral-light-grey bg-neutral-white p-6 sm:p-10">
-          <label className="block text-sm">Nom de l’hôte<input name="host_name" value={fields.hostName} onChange={(event) => updateField("hostName", event.target.value)} className={inputClass} /></label>
+          <label className="block text-sm">Nom de l’hôte<input value={hostName} disabled className={`${inputClass} disabled:cursor-not-allowed disabled:bg-neutral-light-grey`} /></label>
           <div>
             <p className="mb-1 text-sm">Photo de profil</p>
-            <ImageUploadField id="profile-picture" label="Photo de profil" file={profilePicture} onChange={setProfilePicture} inputRef={profilePictureInputRef} />
-            <button type="button" onClick={() => profilePictureInputRef.current?.click()} className="mt-1 text-xs text-brand-main-red hover:underline">+ Ajouter une image</button>
+            <Image src={hostPicture || "/images/Portrait_Placeholder.png"} alt={`Photo de profil de ${hostName || "l’hôte"}`} width={96} height={96} unoptimized className="size-24 rounded-sm object-cover" />
           </div>
         </section>
         </div>

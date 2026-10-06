@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -10,19 +10,27 @@ vi.mock("@/features/properties/actions/create-property", () => ({ createProperty
 describe("CreatePropertyForm", () => {
   afterEach(() => vi.unstubAllGlobals());
   it("shows required fields and optional categories", () => {
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture="/uploads/host.jpg" />);
     expect(screen.getByLabelText(/titre de la propriété/i)).toBeRequired();
     expect(screen.getByLabelText(/code postal/i)).toHaveAttribute("pattern", "[0-9]{5}");
     expect(screen.getByLabelText(/image de couverture/i)).toHaveAttribute("aria-required", "true");
     expect(screen.getByLabelText("Image du logement 1")).not.toHaveAttribute("multiple");
-    expect(screen.getByLabelText(/nom de l’hôte/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/photo de profil/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/nom de l’hôte/i)).toBeDisabled();
+    expect(screen.getByLabelText(/nom de l’hôte/i)).toHaveValue("Hôte Kasa");
+    expect(screen.getByRole("img", { name: "Photo de profil de Hôte Kasa" })).toHaveAttribute("src", "/uploads/host.jpg");
+    expect(within(screen.getByRole("region", { name: "Informations de l’hôte" })).queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "WiFi" })).toBeInTheDocument();
+  });
+
+  it("shows the placeholder when the connected user has no profile picture", () => {
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
+
+    expect(screen.getByRole("img", { name: "Photo de profil de Hôte Kasa" })).toHaveAttribute("src", "/images/Portrait_Placeholder.png");
   });
 
   it("adds an individual gallery image field", async () => {
     const user = userEvent.setup();
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
 
     expect(screen.getByLabelText("Image du logement 1")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Ajouter une image" }));
@@ -34,7 +42,7 @@ describe("CreatePropertyForm", () => {
     const revokeUrl = vi.fn();
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: objectUrl, revokeObjectURL: revokeUrl }));
     const user = userEvent.setup();
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
     const input = screen.getByLabelText("Image du logement 1") as HTMLInputElement;
     await user.upload(input, new File(["photo"], "room.jpg", { type: "image/jpeg" }));
     expect(screen.getByRole("button", { name: "Retirer la photo 1" })).toBeInTheDocument();
@@ -46,7 +54,7 @@ describe("CreatePropertyForm", () => {
   it("removes the selected cover image", async () => {
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn().mockReturnValue("blob:cover"), revokeObjectURL: vi.fn() }));
     const user = userEvent.setup();
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
 
     await user.upload(screen.getByLabelText(/image de couverture/i), new File(["cover"], "cover.jpg", { type: "image/jpeg" }));
     expect(screen.getByAltText("Aperçu de la couverture")).toBeInTheDocument();
@@ -61,7 +69,7 @@ describe("CreatePropertyForm", () => {
     const revokeObjectUrl = vi.fn();
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: createObjectUrl, revokeObjectURL: revokeObjectUrl }));
     const user = userEvent.setup();
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
     const coverInput = screen.getByLabelText(/image de couverture/i);
 
     await user.upload(coverInput, new File(["first"], "first.jpg", { type: "image/jpeg" }));
@@ -76,7 +84,7 @@ describe("CreatePropertyForm", () => {
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn().mockReturnValue("blob:preview"), revokeObjectURL: vi.fn() }));
     createActionMock.mockResolvedValue({ error: "Service indisponible" });
     const user = userEvent.setup();
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
 
     await user.type(screen.getByLabelText(/titre de la propriété/i), "Studio");
     await user.type(screen.getByLabelText(/code postal/i), "06000");
@@ -95,7 +103,7 @@ describe("CreatePropertyForm", () => {
 
   it("adds and removes a custom category", async () => {
     const user = userEvent.setup();
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
     await user.type(screen.getByLabelText("Tag personnalisé 1"), "Terrasse");
     await user.click(screen.getByRole("button", { name: "Ajouter ce tag" }));
     expect(screen.getByRole("button", { name: "Retirer la catégorie Terrasse" })).toBeInTheDocument();
@@ -105,7 +113,7 @@ describe("CreatePropertyForm", () => {
 
   it("adds another custom tag field from the link below the input", async () => {
     const user = userEvent.setup();
-    render(<CreatePropertyForm />);
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
 
     await user.click(screen.getByRole("button", { name: "+ Ajouter un tag" }));
 

@@ -3,15 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/api/errors";
 import { createPropertyAction } from "./create-property";
 
-const { userMock, uploadMock, createMock, updateUserMock, deleteMock, redirectMock, revalidateMock } = vi.hoisted(() => ({
-  userMock: vi.fn(), uploadMock: vi.fn(), createMock: vi.fn(), updateUserMock: vi.fn(), deleteMock: vi.fn(), redirectMock: vi.fn(), revalidateMock: vi.fn(),
+const { userMock, uploadMock, createMock, deleteMock, redirectMock, revalidateMock } = vi.hoisted(() => ({
+  userMock: vi.fn(), uploadMock: vi.fn(), createMock: vi.fn(), deleteMock: vi.fn(), redirectMock: vi.fn(), revalidateMock: vi.fn(),
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: "token" }) }) }));
 vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidateMock }));
 vi.mock("@/features/auth/services/has-valid-session", () => ({ getSessionUser: userMock }));
 vi.mock("@/features/properties/services/create-property", () => ({
-  uploadPropertyImage: uploadMock, createProperty: createMock, updateUserProfile: updateUserMock, deleteUploadedImages: deleteMock,
+  uploadPropertyImage: uploadMock, createProperty: createMock, deleteUploadedImages: deleteMock,
 }));
 
 function validForm() {
@@ -23,7 +23,7 @@ function validForm() {
 }
 
 describe("createPropertyAction", () => {
-  beforeEach(() => { vi.clearAllMocks(); userMock.mockResolvedValue({ id: 3, role: "owner" }); uploadMock.mockResolvedValue("/uploads/cover.jpg"); createMock.mockResolvedValue("new-id"); });
+  beforeEach(() => { vi.clearAllMocks(); userMock.mockResolvedValue({ id: 3, role: "owner", name: "Hôte Kasa", picture: null }); uploadMock.mockResolvedValue("/uploads/cover.jpg"); createMock.mockResolvedValue("new-id"); });
 
   it("refuses clients before uploading", async () => {
     userMock.mockResolvedValue({ id: 3, role: "client" });
@@ -38,16 +38,15 @@ describe("createPropertyAction", () => {
     expect(redirectMock).toHaveBeenCalledWith("/properties/new-id");
   });
 
-  it("uploads and saves the host profile before creating the property", async () => {
+  it("does not modify the profile and uses only the authenticated host", async () => {
     const form = validForm();
-    const profilePicture = new File(["profile"], "profile.jpg", { type: "image/jpeg" });
-    form.set("host_name", "Hôte Kasa");
-    form.set("profile_picture", profilePicture);
+    form.set("host_name", "Profil falsifié");
+    form.set("profile_picture", new File(["profile"], "profile.jpg", { type: "image/jpeg" }));
 
     await createPropertyAction({ error: null }, form);
 
-    expect(uploadMock).toHaveBeenNthCalledWith(1, profilePicture, "user-picture", "token");
-    expect(updateUserMock).toHaveBeenCalledWith(3, { name: "Hôte Kasa", picture: "/uploads/cover.jpg" }, "token");
+    expect(uploadMock).toHaveBeenCalledTimes(1);
+    expect(uploadMock).toHaveBeenCalledWith(expect.any(File), "property-cover", "token");
     expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ host_id: 3 }), "token");
   });
 
