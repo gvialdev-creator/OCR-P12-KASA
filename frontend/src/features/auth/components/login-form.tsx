@@ -19,12 +19,13 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ returnTo = "/" }: { returnTo?: string }) {
   const [state, formAction] = useActionState(loginAction, initialState);
   const [email, setEmail] = useState("");
 
   return (
     <form action={formAction} className="mx-auto mt-8 w-full max-w-70 space-y-5">
+      <input type="hidden" name="returnTo" value={returnTo} />
       <div>
         <label htmlFor="email" className="mb-1 block text-sm text-neutral-black">
           Adresse email

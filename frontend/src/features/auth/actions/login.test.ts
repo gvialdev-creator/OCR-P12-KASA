@@ -16,10 +16,11 @@ vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 
 const loginMock = vi.mocked(loginWithApi);
 
-function credentials(email: string, password: string) {
+function credentials(email: string, password: string, returnTo?: string) {
   const formData = new FormData();
   formData.set("email", email);
   formData.set("password", password);
+  if (returnTo) formData.set("returnTo", returnTo);
   return formData;
 }
 
@@ -59,6 +60,22 @@ describe("loginAction", () => {
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
+    expect(redirectMock).toHaveBeenCalledWith("/");
+  });
+
+  it("returns to a validated internal route after login", async () => {
+    loginMock.mockResolvedValue("signed-token");
+
+    await loginAction({ error: null }, credentials("client@example.com", "secret", "/properties/flat-1?from=home"));
+
+    expect(redirectMock).toHaveBeenCalledWith("/properties/flat-1?from=home");
+  });
+
+  it("rejects external return destinations", async () => {
+    loginMock.mockResolvedValue("signed-token");
+
+    await loginAction({ error: null }, credentials("client@example.com", "secret", "//evil.example/path"));
+
     expect(redirectMock).toHaveBeenCalledWith("/");
   });
 });

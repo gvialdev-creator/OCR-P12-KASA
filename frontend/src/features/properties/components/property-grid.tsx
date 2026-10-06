@@ -4,9 +4,11 @@ import { PropertyCard } from "./property-card";
 
 interface PropertyGridProps {
   properties: Property[];
+  favoriteIds?: string[];
+  isAuthenticated?: boolean;
 }
 
-export function PropertyGrid({ properties }: PropertyGridProps) {
+export function PropertyGrid({ properties, favoriteIds = [], isAuthenticated = false }: PropertyGridProps) {
   if (properties.length === 0) {
     return (
       <p className="rounded-md bg-neutral-white p-page text-center text-neutral-dark-grey shadow-card">
@@ -21,6 +23,8 @@ export function PropertyGrid({ properties }: PropertyGridProps) {
         <PropertyCard
           key={property.id}
           property={property}
+          isFavorite={favoriteIds.includes(property.id)}
+          isAuthenticated={isAuthenticated}
         />
       ))}
     </div>

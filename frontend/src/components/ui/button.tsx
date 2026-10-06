@@ -29,7 +29,7 @@ function getButtonClassName(
       ? "h-9 px-3"
       : "h-9 px-4";
 
-  return `inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-brand-main-red text-sm font-medium text-neutral-white transition-colors hover:bg-brand-dark-orange focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main-red disabled:cursor-not-allowed disabled:bg-neutral-light-grey disabled:text-neutral-dark-grey ${dimensions} ${className}`;
+  return `inline-flex items-center justify-center gap-1 whitespace-nowrap cursor-pointer rounded-lg bg-brand-main-red text-sm font-medium text-neutral-white transition-colors hover:bg-brand-dark-orange focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main-red disabled:cursor-not-allowed disabled:bg-neutral-light-grey disabled:text-neutral-dark-grey ${dimensions} ${className}`;
 }
 
 function ButtonContent({
@@ -59,7 +59,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={getButtonClassName(className, icon, iconOnly) + ' cursor-pointer'}
+      className={getButtonClassName(className, icon, iconOnly)}
       {...props}
     >
       <ButtonContent icon={icon} iconOnly={iconOnly}>
@@ -80,7 +80,7 @@ export function ButtonLink({
   return (
     <Link
       href={href}
-      className={getButtonClassName(className, icon, iconOnly) + ' cursor-pointer'}
+      className={getButtonClassName(className, icon, iconOnly)}
       {...props}
     >
       <ButtonContent icon={icon} iconOnly={iconOnly}>

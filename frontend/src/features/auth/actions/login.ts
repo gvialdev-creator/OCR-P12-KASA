@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { ApiError } from "@/api/errors";
 import { loginWithApi } from "@/features/auth/services/login";
 import { isValidEmail } from "@/features/auth/validation";
+import { getSafeReturnTo } from "@/features/auth/return-to";
 
 export interface LoginState {
   error: string | null;
@@ -42,5 +43,5 @@ export async function loginAction(
     maxAge: 60 * 60 * 24 * 7,
   });
 
-  redirect("/");
+  redirect(getSafeReturnTo(formData.get("returnTo")) ?? "/");
 }

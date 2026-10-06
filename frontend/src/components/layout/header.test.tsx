@@ -58,6 +58,12 @@ describe("Header user menu", () => {
       expect(within(navigation).getByRole("link", { name: "Favoris" })).toHaveAttribute("href", "/favorites");
       expect(within(navigation).getByRole("link", { name: /messages|messagerie/i })).toHaveAttribute("href", "/messages");
     }
+    const favoritesLink = within(actions).getByRole("link", { name: "Favoris" });
+    const heartPaths = favoritesLink.querySelectorAll("svg path");
+    expect(favoritesLink).toHaveClass("text-brand-main-red");
+    expect(heartPaths).toHaveLength(1);
+    expect(heartPaths[0]).toHaveAttribute("fill", "none");
+    expect(heartPaths[0]).toHaveAttribute("stroke", "currentColor");
   });
 
   it("does not offer publication to a signed-in client", async () => {

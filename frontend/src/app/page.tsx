@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 
 import type { Property } from "@/domain/types/property";
 import { HomeHero, HowItWorks } from "@/features/home/components";
@@ -8,6 +9,8 @@ import {
   PropertyGridSkeleton,
 } from "@/features/properties/components";
 import { getProperties } from "@/features/properties/services/get-properties";
+import { getSessionUser } from "@/features/auth/services/has-valid-session";
+import { getUserFavorites } from "@/features/favorites/services/favorites";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +37,18 @@ async function PropertiesContent() {
     return <PropertiesError />;
   }
 
-  return <PropertyGrid properties={result.properties} />;
+  const token = (await cookies()).get("kasa_session")?.value;
+  const user = await getSessionUser(token);
+  let favoriteIds: string[] = [];
+  if (user && token) {
+    try {
+      favoriteIds = (await getUserFavorites(user.id, token)).map((property) => property.id);
+    } catch {
+      favoriteIds = [];
+    }
+  }
+
+  return <PropertyGrid properties={result.properties} favoriteIds={favoriteIds} isAuthenticated={user !== null} />;
 }
 
 export default function Home() {

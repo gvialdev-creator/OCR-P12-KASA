@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { HeartIcon } from "@/components/ui/icons";
 import type { Property } from "@/domain/types/property";
+import { FavoriteButton } from "@/features/favorites/components/favorite-button";
 
 interface PropertyCardProps {
   property: Property;
+  isFavorite: boolean;
+  isAuthenticated: boolean;
 }
 
 const priceFormatter = new Intl.NumberFormat("fr-FR", {
@@ -16,13 +18,15 @@ const priceFormatter = new Intl.NumberFormat("fr-FR", {
 
 export function PropertyCard({
   property,
+  isFavorite,
+  isAuthenticated,
 }: PropertyCardProps) {
   const imageAlt = property.location
     ? `Photo de ${property.title}, ${property.location}`
     : `Photo de ${property.title}`;
 
   return (
-    <article className="group h-full overflow-hidden rounded-md bg-neutral-white shadow-card transition-shadow hover:shadow-card-hover">
+    <article className="group relative h-full overflow-hidden rounded-md bg-neutral-white shadow-card transition-shadow hover:shadow-card-hover">
       <Link href={`/properties/${property.id}`} className="block h-full">
         <div className="relative aspect-4/3 overflow-hidden bg-neutral-light-grey">
           {property.cover ? (
@@ -39,9 +43,6 @@ export function PropertyCard({
             </div>
           )}
 
-          <span className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-neutral-white text-brand-main-red shadow-card">
-            <HeartIcon className="size-4" />
-          </span>
         </div>
 
         <div className="p-component">
@@ -60,6 +61,12 @@ export function PropertyCard({
           </div>
         </div>
       </Link>
+      <FavoriteButton
+        propertyId={property.id}
+        propertyTitle={property.title}
+        initialFavorite={isFavorite}
+        isAuthenticated={isAuthenticated}
+      />
     </article>
   );
 }

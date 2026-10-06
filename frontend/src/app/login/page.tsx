@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/features/auth/components/login-form";
 import { hasValidSession } from "@/features/auth/services/has-valid-session";
+import { getSafeReturnTo } from "@/features/auth/return-to";
 
 export const metadata: Metadata = {
   title: "Connexion | Kasa",
@@ -11,11 +12,12 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  if (await hasValidSession((await cookies()).get("kasa_session")?.value)) {
-    redirect("/");
-  }
+  const { registered, returnTo } = await searchParams;
+  const safeReturnTo = getSafeReturnTo(returnTo) ?? "/";
 
-  const { registered } = await searchParams;
+  if (await hasValidSession((await cookies()).get("kasa_session")?.value)) {
+    redirect(safeReturnTo);
+  }
 
   return (
     <main className="container-app flex flex-1 items-center justify-center py-section">
@@ -31,7 +33,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             Inscription réussie. Vous pouvez vous connecter.
           </p>
         )}
-        <LoginForm />
+        <LoginForm returnTo={safeReturnTo} />
       </section>
     </main>
   );

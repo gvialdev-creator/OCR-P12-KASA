@@ -70,7 +70,7 @@ export async function Header() {
                 aria-label="Favoris"
                 title="Favoris"
               >
-                <HeartIcon className="size-4" />
+                <HeartIcon outline className="size-4" />
               </Link>
               <Link
                 href="/messages"

@@ -22,15 +22,15 @@ describe("LoginPage", () => {
     hasValidSessionMock.mockResolvedValue(false);
   });
 
-  it("redirects an authenticated visitor before rendering the form", async () => {
+  it("redirects an authenticated visitor to a safe return route", async () => {
     getCookie.mockReturnValue({ value: "signed-token" });
     hasValidSessionMock.mockResolvedValue(true);
     redirectMock.mockImplementation(() => { throw new Error("NEXT_REDIRECT"); });
 
-    await expect(LoginPage({ params: Promise.resolve({}), searchParams: Promise.resolve({}) })).rejects.toThrow("NEXT_REDIRECT");
+    await expect(LoginPage({ params: Promise.resolve({}), searchParams: Promise.resolve({ returnTo: "/favorites" }) })).rejects.toThrow("NEXT_REDIRECT");
     expect(getCookie).toHaveBeenCalledWith("kasa_session");
     expect(hasValidSessionMock).toHaveBeenCalledWith("signed-token");
-    expect(redirectMock).toHaveBeenCalledWith("/");
+    expect(redirectMock).toHaveBeenCalledWith("/favorites");
   });
 
   it("shows the form when there is no valid session", async () => {
@@ -50,5 +50,10 @@ describe("LoginPage", () => {
   it("does not show a success message for other query values", async () => {
     render(await LoginPage({ params: Promise.resolve({}), searchParams: Promise.resolve({ registered: "0" }) }));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("renders an internal return destination into the login form", async () => {
+    render(await LoginPage({ params: Promise.resolve({}), searchParams: Promise.resolve({ returnTo: "/properties/flat-1" }) }));
+    expect(screen.getByRole("form", { name: "Connexion" })).toBeInTheDocument();
   });
 });
