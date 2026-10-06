@@ -160,7 +160,7 @@ export function PropertyCarousel({ images, title }: PropertyCarouselProps) {
           )}
         </div>
 
-        {thumbnails.length > 0 && (
+        {canNavigate && thumbnails.length > 0 && (
           <div
             className={
               showThumbnailsOnSide

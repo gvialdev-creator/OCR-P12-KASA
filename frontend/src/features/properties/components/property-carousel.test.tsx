@@ -67,6 +67,8 @@ describe("PropertyCarousel", () => {
         name: /photo 1 sur 1 de appartement cosy/i,
       }),
     ).toBeInTheDocument();
+    expect(screen.getAllByRole("img")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /afficher la photo/i })).not.toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", { name: /photo précédente/i }),
