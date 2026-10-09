@@ -1,0 +1,18 @@
+{
+  "name": "kasabackend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node --env-file=.env ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "socket.io": "^4.8.4",
+    "sqlite3": "^5.1.7"
+  }
+}
