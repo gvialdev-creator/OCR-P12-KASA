@@ -1,15 +1,19 @@
 import Image from "next/image";
+import { cookies } from "next/headers";
 
 import { Button } from "@/components/ui/button";
 import { StarIcon } from "@/components/ui/icons";
 import type { PropertyDetail } from "@/domain/types/property";
+import { getSessionUser } from "@/features/auth/services/has-valid-session";
+import { StartMessageButton } from "@/features/messages/components/start-message-button";
 
 interface PropertyHostCardProps {
   property: PropertyDetail;
 }
 
-export function PropertyHostCard({ property }: PropertyHostCardProps) {
+export async function PropertyHostCard({ property }: PropertyHostCardProps) {
   const host = property.host;
+  const user = await getSessionUser((await cookies()).get("kasa_session")?.value);
 
   return (
     <aside className="rounded-lg bg-neutral-white p-page shadow-card" aria-labelledby="host-title">
@@ -51,7 +55,7 @@ export function PropertyHostCard({ property }: PropertyHostCardProps) {
 
       <div className="mt-8 grid gap-2">
         <Button className="w-full text-neutral-white">Contacter l’hôte</Button>
-        <Button className="w-full text-neutral-white">Envoyer un message</Button>
+        {host && user?.id !== host.id && <StartMessageButton recipientId={host.id} returnTo={`/properties/${property.id}`} />}
       </div>
     </aside>
   );

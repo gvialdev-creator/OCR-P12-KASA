@@ -1,0 +1,24 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Messaging isolated backend",
+			"type": "shell",
+			"command": "PORT=3101 MESSAGING_FRONTEND_ORIGINS=http://localhost:3102 node scripts/messaging-preview.js",
+			"args": [],
+			"isBackground": true,
+			"options": { "cwd": "${workspaceFolder}/backend" },
+			"problemMatcher": [],
+			"group": "test"
+		},
+		{
+			"label": "Messaging isolated frontend",
+			"type": "shell",
+			"command": "API_BASE_URL=http://localhost:3101 NEXT_PUBLIC_MESSAGING_SOCKET_URL=http://localhost:3101 NEXT_DIST_DIR=.next-messaging yarn dev --port 3102",
+			"isBackground": true,
+			"options": { "cwd": "${workspaceFolder}/frontend" },
+			"problemMatcher": [],
+			"group": "test"
+		}
+	]
+}
