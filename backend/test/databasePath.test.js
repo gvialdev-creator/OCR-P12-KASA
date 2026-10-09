@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { DB_PATH, initialize, openDb, resolveDbPath } = require('../db');
+const { DB_PATH, databaseErrorDetails, initialize, openDb, resolveDbPath } = require('../db');
 
 function temporaryDirectory() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'kasa-db-path-'));
@@ -89,4 +89,40 @@ test('local initialization keeps seeding demo properties', async () => {
     if (db) await closeDb(db);
     fs.rmSync(directory, { recursive: true, force: true });
   }
+});
+
+test('database initialization reports a sanitized open failure', async () => {
+  const directory = temporaryDirectory();
+
+  try {
+    await assert.rejects(
+      initialize({ filename: directory, env: { NODE_ENV: 'production' } }),
+      (error) => {
+        const details = databaseErrorDetails(error);
+        assert.equal(details.stage, 'open');
+        assert.equal(typeof details.code, 'string');
+        assert.equal(details.message.includes(directory), false);
+        assert.ok(details.message.length <= 300);
+        return true;
+      },
+    );
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('database error details bound and sanitize the diagnostic message', () => {
+  const details = databaseErrorDetails({
+    databaseStage: 'probe',
+    code: 'SQLITE_ERROR',
+    errno: 1,
+    message: `failure at /app/data/private.sqlite3\n${'x'.repeat(400)}`,
+  });
+
+  assert.equal(details.stage, 'probe');
+  assert.equal(details.code, 'SQLITE_ERROR');
+  assert.equal(details.errno, 1);
+  assert.equal(details.message.includes('/app/data/private.sqlite3'), false);
+  assert.equal(details.message.includes('\n'), false);
+  assert.ok(details.message.length <= 300);
 });

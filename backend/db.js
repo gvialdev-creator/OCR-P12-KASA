@@ -19,11 +19,11 @@ function resolveDbPath(env = process.env) {
 const DB_PATH = resolveDbPath();
 const PROPS_JSON_PATH = path.join(__dirname, 'data', 'properties.json');
 
-function openDb(filename = DB_PATH) {
+function openDb(filename = DB_PATH, onOpen) {
   if (filename !== ':memory:') {
     fs.mkdirSync(path.dirname(filename), { recursive: true });
   }
-  const db = new sqlite3.Database(filename);
+  const db = new sqlite3.Database(filename, onOpen);
   // Promisify helpers
   db.runAsync = function (sql, params = []) {
     return new Promise((resolve, reject) => {
@@ -305,11 +305,57 @@ async function seedIfEmpty(db) {
   });
 }
 
+function openDbAsync(filename) {
+  return new Promise((resolve, reject) => {
+    let db;
+    try {
+      db = openDb(filename, (error) => {
+        if (error) {
+          error.databaseStage = 'open';
+          reject(error);
+          return;
+        }
+        resolve(db);
+      });
+    } catch (error) {
+      error.databaseStage = 'open';
+      reject(error);
+    }
+  });
+}
+
+function databaseErrorDetails(error) {
+  const message = typeof error?.message === 'string'
+    ? error.message.replace(/[\r\n\t]/g, ' ').replace(/\/[\S]+/g, '[path]').slice(0, 300)
+    : 'Unknown database error';
+
+  return {
+    stage: error?.databaseStage || 'unknown',
+    code: typeof error?.code === 'string' ? error.code : undefined,
+    errno: Number.isInteger(error?.errno) ? error.errno : undefined,
+    message,
+  };
+}
+
 async function initialize({ filename = DB_PATH, env = process.env } = {}) {
-  const db = openDb(filename);
-  await initSchema(db);
-  if (env.NODE_ENV !== 'production') await seedIfEmpty(db);
-  return db;
+  let db;
+  let stage = 'open';
+  try {
+    db = await openDbAsync(filename);
+    stage = 'probe';
+    await db.getAsync('SELECT 1 AS connected');
+    stage = 'schema';
+    await initSchema(db);
+    if (env.NODE_ENV !== 'production') {
+      stage = 'seed';
+      await seedIfEmpty(db);
+    }
+    return db;
+  } catch (error) {
+    error.databaseStage = error.databaseStage || stage;
+    if (db) await new Promise((resolve) => db.close(() => resolve()));
+    throw error;
+  }
 }
 
 module.exports = {
@@ -318,4 +364,5 @@ module.exports = {
   initSchema,
   DB_PATH,
   resolveDbPath,
+  databaseErrorDetails,
 };

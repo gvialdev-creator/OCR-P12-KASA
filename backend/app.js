@@ -7,7 +7,7 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const apiRouter = require('./routes/api');
 const authRouter = require('./routes/auth');
-const { initialize } = require('./db');
+const { databaseErrorDetails, initialize } = require('./db');
 
 const app = express();
 
@@ -20,9 +20,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Initialize database and expose via app.locals
 initialize().then((db) => {
   app.locals.db = db;
-  console.log('Database initialized');
+  console.info('database_connected', JSON.stringify({ pathConfigured: Boolean(process.env.DB_PATH) }));
 }).catch((err) => {
-  console.error('Database initialization failed:', err);
+  console.error('database_not_connected', JSON.stringify(databaseErrorDetails(err)));
 });
 
 app.use('/', indexRouter);
