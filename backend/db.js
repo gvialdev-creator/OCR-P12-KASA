@@ -7,6 +7,8 @@ const DB_PATH = path.join(__dirname, 'data', 'kasa.sqlite3');
 const PROPS_JSON_PATH = path.join(__dirname, 'data', 'properties.json');
 
 function openDb(filename = DB_PATH) {
+  console.log("Dossier du module :", __dirname);
+console.log("Chemin de la base :", DB_PATH);
   const db = new sqlite3.Database(filename);
   // Promisify helpers
   db.runAsync = function (sql, params = []) {
