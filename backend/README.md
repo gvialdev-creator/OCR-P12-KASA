@@ -47,17 +47,19 @@ pas vers une Server Action ou un rewrite Next. Les exemples `.env.example` ne co
 
 - PORT: port d’écoute HTTP (par défaut 3000).
 - JWT_SECRET: secret pour signer/vérifier les tokens JWT (par défaut "change-me-in-prod"). En production, définissez une valeur forte et secrète.
+- DB_PATH (optionnel): chemin du fichier SQLite. Par défaut, `backend/data/kasa.sqlite3` en local et `/app/data/kasa.sqlite3` en production. Un chemin relatif est résolu depuis le dossier `backend`.
 
 Vous pouvez lancer le serveur avec, par exemple:
 - JWT_SECRET="votre-secret" PORT=3000 npm start
 
 ## Base de données & données de démo
-- SGBD: SQLite, fichier: data/kasa.sqlite3
-- À l’initialisation, le schéma est créé automatiquement. Si aucune propriété n’existe, un seed est effectué depuis data/properties.json (si présent).
+- SGBD: SQLite. Le fichier local par défaut est `data/kasa.sqlite3`; en production, le chemin par défaut est `/app/data/kasa.sqlite3`. `DB_PATH` permet de choisir un autre chemin.
+- Le dossier parent du fichier est créé automatiquement si nécessaire. En production, montez un stockage persistant et inscriptible sur `/app/data` (ou sur le dossier parent indiqué par `DB_PATH`); un dossier du conteneur éphémère ne garantit pas la conservation des données après redéploiement.
+- À chaque démarrage, le schéma et ses migrations sont appliqués. En local, si aucune propriété n’existe, un seed est effectué depuis `data/properties.json` (si présent). Ce seed de démonstration est désactivé en production.
 - Le schéma inclut: users, properties, property_pictures, property_equipments, property_tags, ratings, favorites.
 - Les slugs des propriétés sont générés automatiquement et uniques.
 
-Sauvegarde: le fichier SQLite (data/kasa.sqlite3) est persistant. Pour repartir de zéro, stoppez le serveur et supprimez ce fichier (et relancez pour recréer/seed).
+Sauvegarde: sauvegardez le fichier SQLite configuré par `DB_PATH` (ou le chemin par défaut de l’environnement). Le changement de chemin ne copie pas une base existante. En local, pour repartir de zéro, arrêtez le serveur et supprimez `data/kasa.sqlite3`, puis relancez-le pour recréer le schéma et charger le seed.
 
 ## Documentation API (OpenAPI)
 ### Messagerie privee

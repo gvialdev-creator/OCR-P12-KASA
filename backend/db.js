@@ -3,12 +3,26 @@ const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 
-const DB_PATH = path.join(__dirname, 'data', 'kasa.sqlite3');
+function resolveDbPath(env = process.env) {
+  if (env.DB_PATH) {
+    if (env.DB_PATH === ':memory:') return env.DB_PATH;
+    return path.isAbsolute(env.DB_PATH)
+      ? env.DB_PATH
+      : path.resolve(__dirname, env.DB_PATH);
+  }
+
+  return env.NODE_ENV === 'production'
+    ? '/app/data/kasa.sqlite3'
+    : path.join(__dirname, 'data', 'kasa.sqlite3');
+}
+
+const DB_PATH = resolveDbPath();
 const PROPS_JSON_PATH = path.join(__dirname, 'data', 'properties.json');
 
 function openDb(filename = DB_PATH) {
-  console.log("Dossier du module :", __dirname);
-console.log("Chemin de la base :", DB_PATH);
+  if (filename !== ':memory:') {
+    fs.mkdirSync(path.dirname(filename), { recursive: true });
+  }
   const db = new sqlite3.Database(filename);
   // Promisify helpers
   db.runAsync = function (sql, params = []) {
@@ -291,10 +305,10 @@ async function seedIfEmpty(db) {
   });
 }
 
-async function initialize() {
-  const db = openDb();
+async function initialize({ filename = DB_PATH, env = process.env } = {}) {
+  const db = openDb(filename);
   await initSchema(db);
-  await seedIfEmpty(db);
+  if (env.NODE_ENV !== 'production') await seedIfEmpty(db);
   return db;
 }
 
@@ -303,4 +317,5 @@ module.exports = {
   openDb,
   initSchema,
   DB_PATH,
+  resolveDbPath,
 };
