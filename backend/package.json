@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+  "start": "if [ \"$NODE_ENV\" = \"production\" ]; then node ./bin/www; else node --env-file=.env ./bin/www; fi"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
