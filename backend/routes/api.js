@@ -16,6 +16,7 @@ router.use(dbReady);
 
 router.use('/conversations', requireAuth, (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 router.get('/conversations', messaging.list);
+router.get('/conversations/with/:recipientId', messaging.hasWith);
 router.post('/conversations', messaging.rateLimit('start', 30), messaging.start);
 router.get('/conversations/:id', messaging.get);
 router.get('/conversations/:id/messages', messaging.load);

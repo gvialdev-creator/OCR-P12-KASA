@@ -26,6 +26,7 @@ const handle = (operation) => async (req, res) => {
 module.exports = {
   rateLimit,
   start: handle(async (req, res, db, userId) => res.status(201).json(await conversations.startConversation(db, userId, req.body?.recipient_id))),
+  hasWith: handle(async (req, res, db, userId) => res.json({ exists: await conversations.hasConversationWith(db, userId, req.params.recipientId) })),
   list: handle(async (req, res, db, userId) => res.json(await conversations.listConversations(db, userId, req.query))),
   get: handle(async (req, res, db, userId) => res.json(await conversations.getConversation(db, userId, req.params.id))),
   load: handle(async (req, res, db, userId) => res.json(await messages.loadMessages(db, userId, req.params.id, req.query))),

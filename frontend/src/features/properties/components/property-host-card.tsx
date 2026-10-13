@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { cookies } from "next/headers";
 
-import { Button } from "@/components/ui/button";
 import { StarIcon } from "@/components/ui/icons";
 import type { PropertyDetail } from "@/domain/types/property";
 import { getSessionUser } from "@/features/auth/services/has-valid-session";
 import { StartMessageButton } from "@/features/messages/components/start-message-button";
+import { hasConversationWithUser } from "@/features/messages/services/messaging";
 
 interface PropertyHostCardProps {
   property: PropertyDetail;
@@ -13,7 +13,16 @@ interface PropertyHostCardProps {
 
 export async function PropertyHostCard({ property }: PropertyHostCardProps) {
   const host = property.host;
-  const user = await getSessionUser((await cookies()).get("kasa_session")?.value);
+  const token = (await cookies()).get("kasa_session")?.value;
+  const user = await getSessionUser(token);
+  let hasExistingConversation = false;
+  if (host && user && token && user.id !== host.id) {
+    try {
+      hasExistingConversation = await hasConversationWithUser(host.id, token);
+    } catch {
+      hasExistingConversation = false;
+    }
+  }
 
   return (
     <aside className="rounded-lg bg-neutral-white p-page shadow-card" aria-labelledby="host-title">
@@ -54,8 +63,7 @@ export async function PropertyHostCard({ property }: PropertyHostCardProps) {
       </div>
 
       <div className="mt-8 grid gap-2">
-        <Button className="w-full text-neutral-white">Contacter l’hôte</Button>
-        {host && user?.id !== host.id && <StartMessageButton recipientId={host.id} returnTo={`/properties/${encodeURIComponent(property.slug)}`} />}
+        {host && user?.id !== host.id && <StartMessageButton recipientId={host.id} returnTo={`/properties/${encodeURIComponent(property.slug)}`} hasExistingConversation={hasExistingConversation} />}
       </div>
     </aside>
   );

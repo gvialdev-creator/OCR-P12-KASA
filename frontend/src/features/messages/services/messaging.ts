@@ -1,4 +1,5 @@
 import { ApiError } from "@/api/errors";
+import type { ConversationPage } from "@/features/messages/types";
 
 export async function messagingRequest<T>(path: string, token: string, method = "GET", body?: unknown): Promise<T> {
   if (!process.env.API_BASE_URL) throw new ApiError("La messagerie n'est pas configurée.");
@@ -28,4 +29,35 @@ export async function messagingRequest<T>(path: string, token: string, method = 
     throw new ApiError(errors[response.status] || "La messagerie est temporairement indisponible.", response.status);
   }
   return response.json() as Promise<T>;
+}
+
+export async function hasConversationWithUser(recipientId: number, token: string): Promise<boolean> {
+  try {
+    const result = await messagingRequest<{ exists: boolean }>(
+      `/conversations/with/${recipientId}`,
+      token,
+    );
+    if (!result || typeof result.exists !== "boolean") {
+      throw new ApiError("Réponse invalide de la messagerie.");
+    }
+    return result.exists;
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 404) throw error;
+  }
+
+  let cursor: string | null = null;
+  do {
+    const query = new URLSearchParams({ limit: "30" });
+    if (cursor) query.set("before", cursor);
+    const page = await messagingRequest<ConversationPage>(
+      `/conversations?${query}`,
+      token,
+    );
+    if (page.conversations.some((conversation) => conversation.peer.id === recipientId)) {
+      return true;
+    }
+    cursor = page.next_cursor;
+  } while (cursor);
+
+  return false;
 }

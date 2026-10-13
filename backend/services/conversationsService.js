@@ -29,6 +29,17 @@ async function startConversation(db, userId, recipientId) {
   });
 }
 
+async function hasConversationWith(db, userId, recipientId) {
+  recipientId = positiveId(recipientId);
+  if (userId === recipientId) fail(400, 'Cannot message yourself');
+  const pair = [userId, recipientId].sort((first, second) => first - second);
+  const row = await db.getAsync(
+    'SELECT id FROM conversations WHERE participant_low_id = ? AND participant_high_id = ?',
+    pair
+  );
+  return Boolean(row);
+}
+
 async function getConversation(db, userId, conversationId) {
   const conversation = await membership(db, userId, conversationId);
   const peerId = conversation.participant_low_id === userId ? conversation.participant_high_id : conversation.participant_low_id;
@@ -67,4 +78,4 @@ async function listConversations(db, userId, options = {}) {
   return { conversations, next_cursor: rows.length > limit ? Buffer.from(JSON.stringify({ id: last.id, date: last.last_message_at })).toString('base64url') : null };
 }
 
-module.exports = { fail, positiveId, membership, startConversation, getConversation, listConversations };
+module.exports = { fail, positiveId, membership, startConversation, hasConversationWith, getConversation, listConversations };

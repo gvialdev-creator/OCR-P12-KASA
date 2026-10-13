@@ -9,17 +9,22 @@ beforeEach(() => vi.clearAllMocks());
 it("starts with the host id and property return path, displaying controlled errors", async () => {
   mocks.start.mockResolvedValue({ error: "Impossible de démarrer" });
   render(<StartMessageButton recipientId={42} returnTo="/properties/flat" />);
-  fireEvent.click(screen.getByRole("button", { name: "Envoyer un message" }));
+  fireEvent.click(screen.getByRole("button", { name: "Contactez l’hôte" }));
   await screen.findByRole("alert");
   expect(mocks.start).toHaveBeenCalledWith(42, "/properties/flat");
-  expect(screen.getByRole("button", { name: "Envoyer un message" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Contactez l’hôte" })).toBeEnabled();
+});
+
+it("shows the send-message label when a conversation already exists", () => {
+  render(<StartMessageButton recipientId={42} returnTo="/properties/flat" hasExistingConversation />);
+  expect(screen.getByRole("button", { name: "Envoyer un message" })).toBeInTheDocument();
 });
 
 it("disables duplicate starts while pending", async () => {
   let complete!: (value: { error: string }) => void;
   mocks.start.mockReturnValue(new Promise((resolve) => { complete = resolve; }));
   render(<StartMessageButton recipientId={42} returnTo="/" />);
-  fireEvent.click(screen.getByRole("button", { name: "Envoyer un message" }));
+  fireEvent.click(screen.getByRole("button", { name: "Contactez l’hôte" }));
   await waitFor(() => expect(screen.getByRole("button", { name: "Ouverture..." })).toBeDisabled());
   complete({ error: "Unavailable" });
   await screen.findByRole("alert");

@@ -25,6 +25,10 @@ async function fixture(callback) {
 test('canonical private pair, concurrent starts and no self-chat', () => fixture(async (db) => {
   const pair = await Promise.all([conversations.startConversation(db, 1, 2), conversations.startConversation(db, 2, 1)]);
   assert.equal(pair[0].id, pair[1].id);
+  assert.equal(await conversations.hasConversationWith(db, 1, 2), true);
+  assert.equal(await conversations.hasConversationWith(db, 2, 1), true);
+  assert.equal(await conversations.hasConversationWith(db, 1, 4), false);
+  await assert.rejects(conversations.hasConversationWith(db, 1, 1), { status: 400 });
   await assert.rejects(conversations.startConversation(db, 1, 1), { status: 400 });
   await assert.rejects(conversations.getConversation(db, 3, pair[0].id), { status: 403 });
   assert.deepEqual((await conversations.listConversations(db, 3)).conversations, []);

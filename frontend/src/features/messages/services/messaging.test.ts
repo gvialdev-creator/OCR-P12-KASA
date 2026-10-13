@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { messagingRequest } from "./messaging";
+import { hasConversationWithUser, messagingRequest } from "./messaging";
 
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
@@ -17,6 +17,37 @@ it("does not expose backend private errors", async () => {
   vi.stubEnv("API_BASE_URL", "http://localhost:3000");
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 403 }));
   await expect(messagingRequest("/conversations/1", "session")).rejects.toMatchObject({ status: 403, message: "Cette conversation est privée." });
+});
+
+it("checks whether the current user already has a conversation with the host", async () => {
+  vi.stubEnv("API_BASE_URL", "http://localhost:3000");
+  const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ exists: true }) });
+  vi.stubGlobal("fetch", fetcher);
+  expect(await hasConversationWithUser(42, "server-session")).toBe(true);
+  expect(fetcher).toHaveBeenCalledWith(new URL("http://localhost:3000/api/conversations/with/42"), expect.objectContaining({
+    method: "GET", cache: "no-store", headers: { Authorization: "Bearer server-session", "Content-Type": "application/json" },
+  }));
+});
+
+it("falls back to the paginated conversation list when the targeted route is unavailable", async () => {
+  vi.stubEnv("API_BASE_URL", "http://localhost:3000");
+  const fetcher = vi.fn()
+    .mockResolvedValueOnce({ ok: false, status: 404 })
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        conversations: [{ peer: { id: 42 } }],
+        next_cursor: null,
+      }),
+    });
+  vi.stubGlobal("fetch", fetcher);
+
+  expect(await hasConversationWithUser(42, "server-session")).toBe(true);
+  expect(fetcher).toHaveBeenNthCalledWith(
+    2,
+    new URL("http://localhost:3000/api/conversations?limit=30"),
+    expect.any(Object),
+  );
 });
 
 it("identifies a missing creation route instead of a missing conversation", async () => {
