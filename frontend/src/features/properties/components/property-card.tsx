@@ -27,7 +27,7 @@ export function PropertyCard({
 
   return (
     <article className="group relative h-full overflow-hidden rounded-md bg-neutral-white shadow-card transition-shadow hover:shadow-card-hover">
-      <Link href={`/properties/${property.id}`} className="block h-full">
+      <Link href={`/properties/${encodeURIComponent(property.slug)}`} className="block h-full">
         <div className="relative aspect-4/3 overflow-hidden bg-neutral-light-grey">
           {property.cover ? (
             <Image

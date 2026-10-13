@@ -48,6 +48,20 @@ async function listProperties(db) {
   return rows.map(mapPropertyRow);
 }
 
+async function getPropertyDetailsFromRow(db, row) {
+  if (!row) return null;
+  const base = mapPropertyRow(row);
+  const pictures = await db.allAsync('SELECT url FROM property_pictures WHERE property_id = ?', [row.id]);
+  const equipments = await db.allAsync('SELECT name FROM property_equipments WHERE property_id = ?', [row.id]);
+  const tags = await db.allAsync('SELECT name FROM property_tags WHERE property_id = ?', [row.id]);
+  return {
+    ...base,
+    pictures: pictures.map(r => r.url),
+    equipments: equipments.map(r => r.name),
+    tags: tags.map(r => r.name),
+  };
+}
+
 async function getPropertyDetails(db, id) {
   const row = await db.getAsync(`
     SELECT p.*, u.name AS host_name, u.picture AS host_picture
@@ -55,17 +69,17 @@ async function getPropertyDetails(db, id) {
     JOIN users u ON u.id = p.host_id
     WHERE p.id = ?
   `, [id]);
-  if (!row) return null;
-  const base = mapPropertyRow(row);
-  const pictures = await db.allAsync('SELECT url FROM property_pictures WHERE property_id = ?', [id]);
-  const equipments = await db.allAsync('SELECT name FROM property_equipments WHERE property_id = ?', [id]);
-  const tags = await db.allAsync('SELECT name FROM property_tags WHERE property_id = ?', [id]);
-  return {
-    ...base,
-    pictures: pictures.map(r => r.url),
-    equipments: equipments.map(r => r.name),
-    tags: tags.map(r => r.name),
-  };
+  return getPropertyDetailsFromRow(db, row);
+}
+
+async function getPropertyDetailsBySlug(db, slug) {
+  const row = await db.getAsync(`
+    SELECT p.*, u.name AS host_name, u.picture AS host_picture
+    FROM properties p
+    JOIN users u ON u.id = p.host_id
+    WHERE p.slug = ?
+  `, [slug]);
+  return getPropertyDetailsFromRow(db, row);
 }
 
 async function ensureHost(db, host_id, host) {
@@ -196,6 +210,7 @@ async function getPropertyOwnerId(db, id) {
 module.exports = {
   listProperties,
   getPropertyDetails,
+  getPropertyDetailsBySlug,
   createProperty,
   updateProperty,
   deleteProperty,

@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     ...properties.map((property) => ({
-      url: `${siteUrl}/properties/${encodeURIComponent(property.id)}`,
+      url: `${siteUrl}/properties/${encodeURIComponent(property.slug)}`,
       changeFrequency: "hourly" as const,
       priority: 0.8,
     })),

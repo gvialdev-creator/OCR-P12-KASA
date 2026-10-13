@@ -36,14 +36,14 @@ export async function createPropertyAction(_state: CreatePropertyState, formData
   if (customTag) tags.push(customTag);
 
   const uploaded: string[] = [];
-  let id: string;
+  let slug: string;
   let creating = false;
   try {
     for (const file of files as File[]) {
       uploaded.push(await uploadPropertyImage(file, file === cover ? "property-cover" : "property-picture", token));
     }
     creating = true;
-    id = await createProperty({
+    slug = await createProperty({
       title, description, location, postal_code: postalCode, price_per_night: price,
       host_id: user.id, cover: uploaded[0], pictures: uploaded.slice(1), equipments, tags: [...new Set(tags)],
     }, token);
@@ -60,5 +60,5 @@ export async function createPropertyAction(_state: CreatePropertyState, formData
   revalidatePath("/");
   revalidatePath("/properties-data");
   revalidatePath("/sitemap.xml");
-  redirect(`/properties/${encodeURIComponent(id)}`);
+  redirect(`/properties/${encodeURIComponent(slug)}`);
 }

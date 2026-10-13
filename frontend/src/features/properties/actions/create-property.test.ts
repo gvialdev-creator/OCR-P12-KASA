@@ -23,7 +23,7 @@ function validForm() {
 }
 
 describe("createPropertyAction", () => {
-  beforeEach(() => { vi.clearAllMocks(); userMock.mockResolvedValue({ id: 3, role: "owner", name: "Hôte Kasa", picture: null }); uploadMock.mockResolvedValue("/uploads/cover.jpg"); createMock.mockResolvedValue("new-id"); });
+  beforeEach(() => { vi.clearAllMocks(); userMock.mockResolvedValue({ id: 3, role: "owner", name: "Hôte Kasa", picture: null }); uploadMock.mockResolvedValue("/uploads/cover.jpg"); createMock.mockResolvedValue("studio-nice"); });
 
   it("refuses clients before uploading", async () => {
     userMock.mockResolvedValue({ id: 3, role: "client" });
@@ -35,7 +35,7 @@ describe("createPropertyAction", () => {
     await createPropertyAction({ error: null }, validForm());
     expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ host_id: 3, postal_code: "06000", cover: "/uploads/cover.jpg", price_per_night: 90 }), "token");
     expect(revalidateMock).toHaveBeenCalledWith("/");
-    expect(redirectMock).toHaveBeenCalledWith("/properties/new-id");
+    expect(redirectMock).toHaveBeenCalledWith("/properties/studio-nice");
   });
 
   it("does not modify the profile and uses only the authenticated host", async () => {

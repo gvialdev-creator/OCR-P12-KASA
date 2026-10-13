@@ -31,6 +31,7 @@ router.patch('/admin/owner-requests/:id', requireAdmin, ownerRequests.decide);
 
 // Properties
 router.get('/properties', properties.list);
+router.get('/properties/slug/:slug', properties.getBySlug);
 router.get('/properties/:id', properties.getById);
 router.post('/properties', requireRole(['owner','admin']), properties.create);
 router.patch('/properties/:id', requireRole(['owner','admin']), properties.update);

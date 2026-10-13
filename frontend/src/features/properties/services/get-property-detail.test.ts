@@ -10,8 +10,8 @@ describe("getPropertyDetail", () => {
   it("fetches the latest property and host profile without a fixed cache duration", async () => {
     vi.mocked(apiFetch).mockResolvedValue({ host: { picture: "/uploads/current.jpg" } });
 
-    await getPropertyDetail("property-1");
+    await getPropertyDetail("studio-nice");
 
-    expect(apiFetch).toHaveBeenCalledWith("/api/properties/property-1");
+    expect(apiFetch).toHaveBeenCalledWith("/api/properties/slug/studio-nice");
   });
 });

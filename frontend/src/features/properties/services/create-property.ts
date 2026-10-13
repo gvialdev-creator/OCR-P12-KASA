@@ -37,10 +37,10 @@ export async function createProperty(payload: Record<string, unknown>, token: st
   }
   if (!response.ok) throw new ApiError("Impossible de créer le logement.", response.status);
   const result: unknown = await response.json();
-  if (!result || typeof result !== "object" || !("id" in result) || typeof result.id !== "string") {
+  if (!result || typeof result !== "object" || !("slug" in result) || typeof result.slug !== "string") {
     throw new ApiError("Réponse invalide lors de la création.");
   }
-  return result.id;
+  return result.slug;
 }
 
 export async function deleteUploadedImages(urls: string[], token: string): Promise<void> {

@@ -55,7 +55,7 @@ export async function PropertyHostCard({ property }: PropertyHostCardProps) {
 
       <div className="mt-8 grid gap-2">
         <Button className="w-full text-neutral-white">Contacter l’hôte</Button>
-        {host && user?.id !== host.id && <StartMessageButton recipientId={host.id} returnTo={`/properties/${property.id}`} />}
+        {host && user?.id !== host.id && <StartMessageButton recipientId={host.id} returnTo={`/properties/${encodeURIComponent(property.slug)}`} />}
       </div>
     </aside>
   );

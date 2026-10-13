@@ -25,7 +25,7 @@ describe("PropertyGrid", () => {
   it("renders the property link and independent active favorite button", () => {
     render(<PropertyGrid properties={[property]} favoriteIds={[property.id]} isAuthenticated />);
 
-    expect(screen.getByRole("link", { name: /Appartement cosy/ })).toHaveAttribute("href", "/properties/flat-1");
+    expect(screen.getByRole("link", { name: /Appartement cosy/ })).toHaveAttribute("href", "/properties/appartement-cosy");
     expect(screen.getByRole("button", { name: "Retirer Appartement cosy des favoris" })).toHaveAttribute("aria-pressed", "true");
   });
 

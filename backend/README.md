@@ -127,6 +127,7 @@ Endpoints d’auth principaux (voir OpenAPI pour le détail):
 ## Routes principales (aperçu)
 Base: /api
 - GET /api/properties: liste des propriétés
+- GET /api/properties/slug/:slug: détail d’une propriété par slug
 - GET /api/properties/:id: détail d’une propriété
 - POST /api/properties: création (rôle: owner ou admin)
 - PATCH /api/properties/:id: mise à jour (rôle: owner ou admin)

@@ -11,16 +11,16 @@ import { getPropertyDetail } from "@/features/properties/services/get-property-d
 export const revalidate = 3600;
 
 interface PropertyPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 type PropertyResult =
   | { property: PropertyDetail; state: "success" }
   | { property: null; state: "not-found" | "error" };
 
-async function loadProperty(id: string): Promise<PropertyResult> {
+async function loadProperty(slug: string): Promise<PropertyResult> {
   try {
-    const property = await getPropertyDetail(id);
+    const property = await getPropertyDetail(slug);
     return { property, state: "success" };
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
@@ -31,15 +31,15 @@ async function loadProperty(id: string): Promise<PropertyResult> {
 }
 
 export async function generateMetadata({ params }: PropertyPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const result = await loadProperty(id);
+  const { slug } = await params;
+  const result = await loadProperty(slug);
 
   if (result.state !== "success") return { title: "Logement | Kasa" };
 
   const property = result.property;
   const siteUrl = process.env.SITE_URL?.replace(/\/$/, "");
   const propertyUrl = siteUrl
-    ? `${siteUrl}/properties/${encodeURIComponent(property.id)}`
+    ? `${siteUrl}/properties/${encodeURIComponent(property.slug)}`
     : undefined;
   const description =
     property.description ?? `Découvrez ${property.title} sur Kasa.`;
@@ -69,8 +69,8 @@ export async function generateMetadata({ params }: PropertyPageProps): Promise<M
 }
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
-  const { id } = await params;
-  const result = await loadProperty(id);
+  const { slug } = await params;
+  const result = await loadProperty(slug);
 
   if (result.state === "not-found") notFound();
 

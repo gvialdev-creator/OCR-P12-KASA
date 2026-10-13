@@ -1,6 +1,7 @@
 const {
   listProperties,
   getPropertyDetails,
+  getPropertyDetailsBySlug,
   createProperty,
   updateProperty,
   deleteProperty,
@@ -26,6 +27,17 @@ async function getById(req, res) {
   const db = req.app.locals.db;
   try {
     const prop = await getPropertyDetails(db, req.params.id);
+    if (!prop) return res.status(404).json({ error: 'Property not found' });
+    res.json(prop);
+  } catch (e) {
+    res.status(statusFromError(e)).json({ error: e.message });
+  }
+}
+
+async function getBySlug(req, res) {
+  const db = req.app.locals.db;
+  try {
+    const prop = await getPropertyDetailsBySlug(db, req.params.slug);
     if (!prop) return res.status(404).json({ error: 'Property not found' });
     res.json(prop);
   } catch (e) {
@@ -73,6 +85,7 @@ async function remove(req, res) {
 module.exports = {
   list,
   getById,
+  getBySlug,
   create,
   update,
   remove,

@@ -1,6 +1,27 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createProperty, getPropertyDetails, updateProperty } = require('../services/propertiesService');
+const { createProperty, getPropertyDetails, getPropertyDetailsBySlug, updateProperty } = require('../services/propertiesService');
+
+test('property details can be resolved by slug while related records use the property id', async () => {
+  const queries = [];
+  const db = {
+    async getAsync(sql, params) {
+      queries.push({ sql, params });
+      if (sql.includes('FROM properties p')) {
+        return { id: 'property-1', slug: 'studio-nice', title: 'Studio Nice', host_id: 3 };
+      }
+      return null;
+    },
+    async allAsync(sql, params) { queries.push({ sql, params }); return []; },
+  };
+
+  const property = await getPropertyDetailsBySlug(db, 'studio-nice');
+
+  assert.equal(property.id, 'property-1');
+  assert.equal(queries[0].params[0], 'studio-nice');
+  assert.match(queries[0].sql, /WHERE p\.slug = \?/);
+  assert.ok(queries.slice(1).every(({ params }) => params[0] === 'property-1'));
+});
 
 test('creation and update retain postal codes as text', async () => {
   const queries = [];

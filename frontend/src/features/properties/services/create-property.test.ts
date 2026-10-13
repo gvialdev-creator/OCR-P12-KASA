@@ -20,10 +20,10 @@ describe("property creation API", () => {
 
   it("creates the property with its server-validated payload", async () => {
     vi.stubEnv("API_BASE_URL", "http://localhost:3001");
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "new-id" }) });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "new-id", slug: "studio-nice" }) });
     vi.stubGlobal("fetch", fetchMock);
     const payload = { title: "Studio", host_id: 3, postal_code: "06000" };
-    expect(await createProperty(payload, "token")).toBe("new-id");
+    expect(await createProperty(payload, "token")).toBe("studio-nice");
     expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3001/api/properties"), {
       method: "POST", headers: { Authorization: "Bearer token", "Content-Type": "application/json" },
       body: JSON.stringify(payload), cache: "no-store",
