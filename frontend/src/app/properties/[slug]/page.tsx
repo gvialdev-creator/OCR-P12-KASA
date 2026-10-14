@@ -6,6 +6,7 @@ import { ApiError } from "@/api/errors";
 import { ArrowLeftIcon } from "@/components/ui/icons";
 import type { PropertyDetail } from "@/domain/types/property";
 import { PropertyDetailView } from "@/features/properties/components/property-detail-view";
+import { buildAccommodationStructuredData } from "@/features/properties/seo/accommodation-structured-data";
 import { getPropertyDetail } from "@/features/properties/services/get-property-detail";
 
 export const revalidate = 3600;
@@ -76,31 +77,12 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
 
   const jsonLd =
     result.state === "success"
-      ? JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Accommodation",
-          name: result.property.title,
-          description: result.property.description,
-          image: [
-            result.property.cover,
-            ...result.property.pictures,
-          ].filter(Boolean),
-          address: result.property.location
-            ? { "@type": "PostalAddress", addressLocality: result.property.location }
-            : undefined,
-          offers: {
-            "@type": "Offer",
-            price: result.property.price_per_night,
-            priceCurrency: "EUR",
-          },
-          aggregateRating: result.property.ratings_count > 0
-            ? {
-                "@type": "AggregateRating",
-                ratingValue: result.property.rating_avg,
-                ratingCount: result.property.ratings_count,
-              }
-            : undefined,
-        }).replace(/[<>&]/g, (character) => ({ "<": "\\u003c", ">": "\\u003e", "&": "\\u0026" })[character] ?? character)
+      ? JSON.stringify(
+          buildAccommodationStructuredData(
+            result.property,
+            process.env.SITE_URL?.replace(/\/$/, ""),
+          ),
+        ).replace(/[<>&]/g, (character) => ({ "<": "\\u003c", ">": "\\u003e", "&": "\\u0026" })[character] ?? character)
       : null;
 
   return (
