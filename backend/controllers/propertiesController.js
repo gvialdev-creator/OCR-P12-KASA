@@ -1,3 +1,7 @@
+/**
+ * Gère les requêtes HTTP des annonces immobilières.
+ * @module controllers/propertiesController
+ */
 const {
   listProperties,
   getPropertyDetails,

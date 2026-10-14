@@ -1,4 +1,8 @@
 /** Convertit une ligne propriété jointe à son hôte vers la forme REST de base. */
+/**
+ * Requêtes et règles de domaine pour annonces, slugs et données associées.
+ * @module services/propertiesService
+ */
 function mapPropertyRow(row) {
   if (!row) return null;
   return {

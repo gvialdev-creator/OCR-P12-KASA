@@ -1,3 +1,7 @@
+/**
+ * Route placeholder historique sous /users, distincte de /api/users.
+ * @module routes/users
+ */
 const express = require('express');
 const router = express.Router();
 

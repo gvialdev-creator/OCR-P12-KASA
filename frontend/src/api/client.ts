@@ -2,7 +2,8 @@ import { ApiError } from "@/api/errors";
 
 const apiBaseUrl = process.env.API_BASE_URL;
 
-interface ApiFetchOptions {
+/** Options de cache pour une requête API serveur. */
+export interface ApiFetchOptions {
   /** Cache public en secondes ; absent ou nul, la réponse utilise `no-store`. */
   revalidate?: number;
 }

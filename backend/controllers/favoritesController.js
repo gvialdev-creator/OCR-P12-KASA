@@ -1,3 +1,7 @@
+/**
+ * Gère les réponses HTTP des opérations de favoris.
+ * @module controllers/favoritesController
+ */
 const { addFavorite, removeFavorite, listFavoritesForUser } = require('../services/favoritesService');
 
 function statusFromError(e) {

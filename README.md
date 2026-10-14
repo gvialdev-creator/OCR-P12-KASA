@@ -62,3 +62,5 @@ cd backend && node --test
 ```
 
 Voir [frontend/README.md](frontend/README.md) pour les conventions et commandes frontend, et [backend/README.md](backend/README.md) pour la configuration, la base de données et l’API.
+
+La documentation du code générée par JSDoc et TypeDoc est indexée dans [docs/README.md](docs/README.md).

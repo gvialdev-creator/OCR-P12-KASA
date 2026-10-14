@@ -1,3 +1,7 @@
+/**
+ * Ajout, retrait et lecture des favoris associés à un compte.
+ * @module services/favoritesService
+ */
 async function addFavorite(db, userId, propertyId) {
   if (!userId) { const err = new Error('authentication required'); err.status = 401; throw err; }
   if (!propertyId) { const err = new Error('property id is required'); err.status = 400; throw err; }

@@ -4,7 +4,8 @@ import Link from "next/link";
 import type { Property } from "@/domain/types/property";
 import { FavoriteButton } from "@/features/favorites/components/favorite-button";
 
-interface PropertyCardProps {
+/** Annonce et état d’authentification/favori requis pour afficher une carte. */
+export interface PropertyCardProps {
   property: Property;
   isFavorite: boolean;
   isAuthenticated: boolean;

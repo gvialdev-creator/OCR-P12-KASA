@@ -1,3 +1,7 @@
+/**
+ * Gère les réponses HTTP des notes d’annonces.
+ * @module controllers/ratingsController
+ */
 const { listRatingsForProperty, addRating } = require('../services/ratingsService');
 
 function statusFromError(e) {

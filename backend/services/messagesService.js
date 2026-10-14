@@ -1,3 +1,7 @@
+/**
+ * Historique paginé, envois idempotents et curseurs de lecture.
+ * @module services/messagesService
+ */
 const { transaction } = require('./databaseQueue');
 const { fail, positiveId, membership } = require('./conversationsService');
 

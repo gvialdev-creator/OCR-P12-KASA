@@ -1,3 +1,7 @@
+/**
+ * Émet et vérifie les tickets Socket.IO distincts des JWT REST.
+ * @module realtime/socketTickets
+ */
 const jwt = require('jsonwebtoken');
 
 const options = { algorithm: 'HS256', audience: 'messaging-socket', issuer: 'kasa-messaging' };

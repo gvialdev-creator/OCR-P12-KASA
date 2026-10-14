@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: services/ownerRequestsService.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: services/ownerRequestsService.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Cycle de vie transactionnel des demandes d’accès au rôle owner.
+ * @module services/ownerRequestsService
+ */
+function createError(message, status) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+function mapRequest(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    name: row.name,
+    email: row.email,
+    status: row.status,
+    submitted_at: row.submitted_at,
+    decided_at: row.decided_at,
+  };
+}
+
+async function getRequest(db, requestId) {
+  return db.getAsync(
+    `SELECT r.id, r.user_id, u.name, u.email, r.status, r.submitted_at, r.decided_at
+     FROM owner_requests r JOIN users u ON u.id = r.user_id WHERE r.id = ?`,
+    [requestId]
+  );
+}
+
+async function getMyLatestRequest(db, userId) {
+  const row = await db.getAsync(
+    `SELECT id, user_id, status, submitted_at, decided_at
+     FROM owner_requests WHERE user_id = ? ORDER BY id DESC LIMIT 1`,
+    [userId]
+  );
+  if (!row) return null;
+  return { id: row.id, status: row.status, submitted_at: row.submitted_at, decided_at: row.decided_at };
+}
+
+/**
+ * Crée une demande pour l’utilisateur client authentifié par le contrôleur.
+ * L’index unique partiel en base protège aussi contre deux soumissions concurrentes.
+ * @throws {Error} Erreur avec `status` 403 si le rôle n’est pas client, 404 si le compte manque, 409 si une demande attend déjà.
+ */
+async function submitOwnerRequest(db, userId) {
+  const user = await db.getAsync('SELECT role FROM users WHERE id = ?', [userId]);
+  if (!user) throw createError('User not found', 404);
+  if (user.role !== 'client') throw createError('Only clients can request owner access', 403);
+
+  const pending = await db.getAsync(
+    "SELECT id FROM owner_requests WHERE user_id = ? AND status = 'pending'",
+    [userId]
+  );
+  if (pending) throw createError('An owner request is already pending', 409);
+
+  try {
+    const result = await db.runAsync("INSERT INTO owner_requests(user_id, status) VALUES (?, 'pending')", [userId]);
+    return await getMyLatestRequest(db, userId);
+  } catch (error) {
+    if (/UNIQUE/i.test(error.message)) throw createError('An owner request is already pending', 409);
+    throw error;
+  }
+}
+
+async function listPendingOwnerRequests(db) {
+  const rows = await db.allAsync(
+    `SELECT r.id, r.user_id, u.name, u.email, r.status, r.submitted_at, r.decided_at
+     FROM owner_requests r JOIN users u ON u.id = r.user_id
+     WHERE r.status = 'pending' ORDER BY r.submitted_at ASC, r.id ASC`
+  );
+  return rows.map(mapRequest);
+}
+
+/**
+ * Applique une seule décision admin; approbation et promotion client→owner
+ * sont atomiques et refus ne change pas le rôle.
+ * @throws {Error} Erreur avec `status` 400 pour une décision invalide, 404 si la demande manque, 409 si elle a déjà été décidée ou si le demandeur n’est plus client.
+ */
+async function decideOwnerRequest(db, requestId, adminId, decision) {
+  if (!['approve', 'reject'].includes(decision)) throw createError('decision must be approve or reject', 400);
+  const nextStatus = decision === 'approve' ? 'approved' : 'rejected';
+
+  return require('./databaseQueue').transaction(db, async () => {
+    const request = await getRequest(db, requestId);
+    if (!request) throw createError('Owner request not found', 404);
+    if (request.status !== 'pending') throw createError('Owner request has already been decided', 409);
+
+    const update = await db.runAsync(
+      "UPDATE owner_requests SET status = ?, decided_at = CURRENT_TIMESTAMP, decided_by = ? WHERE id = ? AND status = 'pending'",
+      [nextStatus, adminId, requestId]
+    );
+    if (update.changes !== 1) throw createError('Owner request has already been decided', 409);
+
+    if (decision === 'approve') {
+      const promotion = await db.runAsync("UPDATE users SET role = 'owner' WHERE id = ? AND role = 'client'", [request.user_id]);
+      if (promotion.changes !== 1) throw createError('Requester is no longer a client', 409);
+    }
+
+    return mapRequest(await getRequest(db, requestId));
+  });
+}
+
+module.exports = { getMyLatestRequest, submitOwnerRequest, listPendingOwnerRequests, decideOwnerRequest };</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-controllers_authController.html">controllers/authController</a></li><li><a href="module-controllers_favoritesController.html">controllers/favoritesController</a></li><li><a href="module-controllers_messagingController.html">controllers/messagingController</a></li><li><a href="module-controllers_ownerRequestsController.html">controllers/ownerRequestsController</a></li><li><a href="module-controllers_propertiesController.html">controllers/propertiesController</a></li><li><a href="module-controllers_ratingsController.html">controllers/ratingsController</a></li><li><a href="module-controllers_uploadsController.html">controllers/uploadsController</a></li><li><a href="module-controllers_usersController.html">controllers/usersController</a></li><li><a href="module-db.html">db</a></li><li><a href="module-middlewares_auth.html">middlewares/auth</a></li><li><a href="module-middlewares_dbReady.html">middlewares/dbReady</a></li><li><a href="module-realtime_messaging.html">realtime/messaging</a></li><li><a href="module-realtime_socketTickets.html">realtime/socketTickets</a></li><li><a href="module-routes_api.html">routes/api</a></li><li><a href="module-routes_auth.html">routes/auth</a></li><li><a href="module-routes_index.html">routes/index</a></li><li><a href="module-routes_users.html">routes/users</a></li><li><a href="module-services_authService.html">services/authService</a></li><li><a href="module-services_conversationsService.html">services/conversationsService</a></li><li><a href="module-services_databaseQueue.html">services/databaseQueue</a></li><li><a href="module-services_favoritesService.html">services/favoritesService</a></li><li><a href="module-services_messagesService.html">services/messagesService</a></li><li><a href="module-services_ownerRequestsService.html">services/ownerRequestsService</a></li><li><a href="module-services_propertiesService.html">services/propertiesService</a></li><li><a href="module-services_ratingsService.html">services/ratingsService</a></li><li><a href="module-services_usersService.html">services/usersService</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Oct 14 2026 15:45:02 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import Image, { type ImageProps } from "next/image";
 
-type CircleQuestionIconProps = Omit<
+/** Props de l’icône d’aide, avec dimensions optionnelles et alternative décorative vide. */
+export type CircleQuestionIconProps = Omit<
   ImageProps,
   "src" | "alt" | "width" | "height"
 > & {

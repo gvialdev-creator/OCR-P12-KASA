@@ -1,3 +1,7 @@
+/**
+ * Conversations privées, paire canonique et vérification d’appartenance.
+ * @module services/conversationsService
+ */
 const { transaction } = require('./databaseQueue');
 
 function fail(status, message) {

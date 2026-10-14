@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: services/ratingsService.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: services/ratingsService.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** Liste les notes publiques d’un logement avec les champs publics de leurs auteurs. */
+/**
+ * Lecture des évaluations et recalcul de la moyenne d’une annonce.
+ * @module services/ratingsService
+ */
+async function listRatingsForProperty(db, propertyId) {
+  const prop = await db.getAsync('SELECT id FROM properties WHERE id = ?', [propertyId]);
+  if (!prop) {
+    const err = new Error('Property not found');
+    err.status = 404;
+    throw err;
+  }
+  const rows = await db.allAsync(`
+      SELECT r.id, r.score, r.comment, r.created_at,
+             u.id as user_id, u.name as user_name, u.picture as user_picture
+      FROM ratings r JOIN users u ON u.id = r.user_id
+      WHERE r.property_id = ?
+      ORDER BY r.created_at DESC
+    `, [propertyId]);
+  return rows.map(r => ({
+    id: r.id,
+    score: r.score,
+    comment: r.comment,
+    created_at: r.created_at,
+    user: { id: r.user_id, name: r.user_name, picture: r.user_picture },
+  }));
+}
+
+/**
+ * Ajoute une note et recalcule moyenne/compteur du logement.
+ * Important : le service prend `user_id` dans le payload et la route actuelle
+ * n’exige pas d’authentification; cette identité n’est donc pas celle d’une session vérifiée.
+ * @throws {Error} Erreur avec `status` 400 si le score ou user_id est invalide, 404 si logement ou utilisateur manque.
+ */
+async function addRating(db, propertyId, { user_id, score, comment = null }) {
+  const s = Number(score);
+  if (!Number.isInteger(s) || s &lt; 1 || s > 5) {
+    const err = new Error('score must be integer between 1 and 5');
+    err.status = 400;
+    throw err;
+  }
+  if (!user_id) {
+    const err = new Error('user_id is required');
+    err.status = 400;
+    throw err;
+  }
+
+  const prop = await db.getAsync('SELECT id FROM properties WHERE id = ?', [propertyId]);
+  if (!prop) {
+    const err = new Error('Property not found');
+    err.status = 404;
+    throw err;
+  }
+  const user = await db.getAsync('SELECT id FROM users WHERE id = ?', [user_id]);
+  if (!user) {
+    const err = new Error('User not found');
+    err.status = 404;
+    throw err;
+  }
+
+  await db.runAsync('INSERT INTO ratings(property_id, user_id, score, comment) VALUES (?,?,?,?)', [propertyId, user_id, s, comment]);
+
+  const stats = await db.getAsync('SELECT AVG(score) as avg, COUNT(*) as cnt FROM ratings WHERE property_id = ?', [propertyId]);
+  const avg = Math.round((stats.avg || 0) * 10) / 10;
+  const cnt = stats.cnt || 0;
+  await db.runAsync('UPDATE properties SET rating_avg = ?, ratings_count = ? WHERE id = ?', [avg, cnt, propertyId]);
+
+  const ratings = await listRatingsForProperty(db, propertyId);
+  return { rating_avg: avg, ratings_count: cnt, ratings };
+}
+
+module.exports = {
+  listRatingsForProperty,
+  addRating,
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-controllers_authController.html">controllers/authController</a></li><li><a href="module-controllers_favoritesController.html">controllers/favoritesController</a></li><li><a href="module-controllers_messagingController.html">controllers/messagingController</a></li><li><a href="module-controllers_ownerRequestsController.html">controllers/ownerRequestsController</a></li><li><a href="module-controllers_propertiesController.html">controllers/propertiesController</a></li><li><a href="module-controllers_ratingsController.html">controllers/ratingsController</a></li><li><a href="module-controllers_uploadsController.html">controllers/uploadsController</a></li><li><a href="module-controllers_usersController.html">controllers/usersController</a></li><li><a href="module-db.html">db</a></li><li><a href="module-middlewares_auth.html">middlewares/auth</a></li><li><a href="module-middlewares_dbReady.html">middlewares/dbReady</a></li><li><a href="module-realtime_messaging.html">realtime/messaging</a></li><li><a href="module-realtime_socketTickets.html">realtime/socketTickets</a></li><li><a href="module-routes_api.html">routes/api</a></li><li><a href="module-routes_auth.html">routes/auth</a></li><li><a href="module-routes_index.html">routes/index</a></li><li><a href="module-routes_users.html">routes/users</a></li><li><a href="module-services_authService.html">services/authService</a></li><li><a href="module-services_conversationsService.html">services/conversationsService</a></li><li><a href="module-services_databaseQueue.html">services/databaseQueue</a></li><li><a href="module-services_favoritesService.html">services/favoritesService</a></li><li><a href="module-services_messagesService.html">services/messagesService</a></li><li><a href="module-services_ownerRequestsService.html">services/ownerRequestsService</a></li><li><a href="module-services_propertiesService.html">services/propertiesService</a></li><li><a href="module-services_ratingsService.html">services/ratingsService</a></li><li><a href="module-services_usersService.html">services/usersService</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Oct 14 2026 15:45:02 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

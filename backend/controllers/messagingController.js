@@ -1,3 +1,7 @@
+/**
+ * Gère les endpoints REST et la publication des événements de messagerie.
+ * @module controllers/messagingController
+ */
 const conversations = require('../services/conversationsService');
 const messages = require('../services/messagesService');
 const { issueTicket } = require('../realtime/socketTickets');

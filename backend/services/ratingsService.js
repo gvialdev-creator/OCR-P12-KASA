@@ -1,4 +1,8 @@
 /** Liste les notes publiques d’un logement avec les champs publics de leurs auteurs. */
+/**
+ * Lecture des évaluations et recalcul de la moyenne d’une annonce.
+ * @module services/ratingsService
+ */
 async function listRatingsForProperty(db, propertyId) {
   const prop = await db.getAsync('SELECT id FROM properties WHERE id = ?', [propertyId]);
   if (!prop) {

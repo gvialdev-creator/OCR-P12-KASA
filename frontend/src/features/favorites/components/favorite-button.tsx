@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { HeartIcon } from "@/components/ui/icons";
 import { setFavoriteAction } from "@/features/favorites/actions/set-favorite";
 
-interface FavoriteButtonProps {
+/** Données de présentation et état initial du bouton favori d’une annonce. */
+export interface FavoriteButtonProps {
   propertyId: string;
   propertyTitle: string;
   initialFavorite: boolean;

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: controllers/propertiesController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: controllers/propertiesController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Gère les requêtes HTTP des annonces immobilières.
+ * @module controllers/propertiesController
+ */
+const {
+  listProperties,
+  getPropertyDetails,
+  getPropertyDetailsBySlug,
+  createProperty,
+  updateProperty,
+  deleteProperty,
+} = require('../services/propertiesService');
+
+function statusFromError(e) {
+  if (e &amp;&amp; e.status) return e.status;
+  if (e &amp;&amp; e.message &amp;&amp; /(UNIQUE|PRIMARY KEY)/i.test(e.message)) return 409;
+  return 500;
+}
+
+async function list(req, res) {
+  const db = req.app.locals.db;
+  try {
+    const rows = await listProperties(db);
+    res.json(rows);
+  } catch (e) {
+    res.status(statusFromError(e)).json({ error: e.message });
+  }
+}
+
+async function getById(req, res) {
+  const db = req.app.locals.db;
+  try {
+    const prop = await getPropertyDetails(db, req.params.id);
+    if (!prop) return res.status(404).json({ error: 'Property not found' });
+    res.json(prop);
+  } catch (e) {
+    res.status(statusFromError(e)).json({ error: e.message });
+  }
+}
+
+async function getBySlug(req, res) {
+  const db = req.app.locals.db;
+  try {
+    const prop = await getPropertyDetailsBySlug(db, req.params.slug);
+    if (!prop) return res.status(404).json({ error: 'Property not found' });
+    res.json(prop);
+  } catch (e) {
+    res.status(statusFromError(e)).json({ error: e.message });
+  }
+}
+
+async function create(req, res) {
+  const db = req.app.locals.db;
+  try {
+    const { host_id, host, ...details } = req.body || {};
+    const created = await createProperty(db, { ...details, host_id: req.user.id });
+    res.status(201).json(created);
+  } catch (e) {
+    const code = statusFromError(e);
+    // Map message for validation consistency
+    let msg = e.message;
+    if (code === 409) msg = 'Property with same id already exists';
+    if (msg === 'title is required') return res.status(400).json({ error: msg });
+    if (msg.startsWith('host_id')) return res.status(400).json({ error: msg });
+    res.status(code).json({ error: msg });
+  }
+}
+
+async function update(req, res) {
+  const db = req.app.locals.db;
+  try {
+    const updated = await updateProperty(db, req.params.id, req.body || {});
+    res.json(updated);
+  } catch (e) {
+    res.status(statusFromError(e)).json({ error: e.message });
+  }
+}
+
+async function remove(req, res) {
+  const db = req.app.locals.db;
+  try {
+    await deleteProperty(db, req.params.id);
+    res.status(204).end();
+  } catch (e) {
+    res.status(statusFromError(e)).json({ error: e.message });
+  }
+}
+
+module.exports = {
+  list,
+  getById,
+  getBySlug,
+  create,
+  update,
+  remove,
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-controllers_authController.html">controllers/authController</a></li><li><a href="module-controllers_favoritesController.html">controllers/favoritesController</a></li><li><a href="module-controllers_messagingController.html">controllers/messagingController</a></li><li><a href="module-controllers_ownerRequestsController.html">controllers/ownerRequestsController</a></li><li><a href="module-controllers_propertiesController.html">controllers/propertiesController</a></li><li><a href="module-controllers_ratingsController.html">controllers/ratingsController</a></li><li><a href="module-controllers_uploadsController.html">controllers/uploadsController</a></li><li><a href="module-controllers_usersController.html">controllers/usersController</a></li><li><a href="module-db.html">db</a></li><li><a href="module-middlewares_auth.html">middlewares/auth</a></li><li><a href="module-middlewares_dbReady.html">middlewares/dbReady</a></li><li><a href="module-realtime_messaging.html">realtime/messaging</a></li><li><a href="module-realtime_socketTickets.html">realtime/socketTickets</a></li><li><a href="module-routes_api.html">routes/api</a></li><li><a href="module-routes_auth.html">routes/auth</a></li><li><a href="module-routes_index.html">routes/index</a></li><li><a href="module-routes_users.html">routes/users</a></li><li><a href="module-services_authService.html">services/authService</a></li><li><a href="module-services_conversationsService.html">services/conversationsService</a></li><li><a href="module-services_databaseQueue.html">services/databaseQueue</a></li><li><a href="module-services_favoritesService.html">services/favoritesService</a></li><li><a href="module-services_messagesService.html">services/messagesService</a></li><li><a href="module-services_ownerRequestsService.html">services/ownerRequestsService</a></li><li><a href="module-services_propertiesService.html">services/propertiesService</a></li><li><a href="module-services_ratingsService.html">services/ratingsService</a></li><li><a href="module-services_usersService.html">services/usersService</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Oct 14 2026 15:45:02 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

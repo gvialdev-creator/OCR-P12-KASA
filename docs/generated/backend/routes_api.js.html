@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: routes/api.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: routes/api.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Déclare les endpoints REST, readiness et middlewares d’autorisation API.
+ * @module routes/api
+ */
+const express = require('express');
+const router = express.Router();
+
+const dbReady = require('../middlewares/dbReady');
+const { requireRole, requireAdmin, requireSelfOrAdmin, requireAuth } = require('../middlewares/auth');
+const properties = require('../controllers/propertiesController');
+const users = require('../controllers/usersController');
+const ratings = require('../controllers/ratingsController');
+const favorites = require('../controllers/favoritesController');
+const uploads = require('../controllers/uploadsController');
+const ownerRequests = require('../controllers/ownerRequestsController');
+const messaging = require('../controllers/messagingController');
+
+// Ensure DB is ready for all API routes
+router.use(dbReady);
+
+router.use('/conversations', requireAuth, (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
+router.get('/conversations', messaging.list);
+router.get('/conversations/with/:recipientId', messaging.hasWith);
+router.post('/conversations', messaging.rateLimit('start', 30), messaging.start);
+router.get('/conversations/:id', messaging.get);
+router.get('/conversations/:id/messages', messaging.load);
+router.post('/conversations/:id/messages', messaging.rateLimit('send', 60), messaging.send);
+router.patch('/conversations/:id/read', messaging.rateLimit('read', 120), messaging.read);
+router.post('/messaging/socket-token', requireAuth, messaging.rateLimit('ticket', 20), messaging.ticket);
+
+// Owner access requests
+router.post('/owner-requests', requireRole(['client']), ownerRequests.submit);
+router.get('/owner-requests/me', requireRole(['client']), ownerRequests.getMine);
+router.get('/admin/owner-requests', requireAdmin, ownerRequests.listPending);
+router.patch('/admin/owner-requests/:id', requireAdmin, ownerRequests.decide);
+
+// Properties
+router.get('/properties', properties.list);
+router.get('/properties/slug/:slug', properties.getBySlug);
+router.get('/properties/:id', properties.getById);
+router.post('/properties', requireRole(['owner','admin']), properties.create);
+router.patch('/properties/:id', requireRole(['owner','admin']), properties.update);
+router.delete('/properties/:id', requireRole(['owner','admin']), properties.remove);
+
+// Users
+router.get('/users', requireAdmin, users.list);
+router.get('/users/:id', requireSelfOrAdmin('id'), users.getById);
+router.post('/users', requireAdmin, users.create);
+router.patch('/users/:id/password', requireSelfOrAdmin('id'), users.changePassword);
+router.patch('/users/:id', requireSelfOrAdmin('id'), users.update);
+
+// Ratings for properties
+router.get('/properties/:id/ratings', ratings.listForProperty);
+router.post('/properties/:id/ratings', ratings.add);
+
+// Favorites
+router.post('/properties/:id/favorite', requireAuth, favorites.addForProperty);
+router.delete('/properties/:id/favorite', requireAuth, favorites.removeForProperty);
+router.get('/users/:id/favorites', requireSelfOrAdmin('id'), favorites.listForUser);
+
+// Uploads
+router.post('/uploads/image', requireRole(['owner','admin']), uploads.uploadImage);
+
+// Delete one or multiple uploaded images by filename or URL
+router.delete('/uploads/images', requireRole(['owner','admin']), uploads.deleteImages);
+
+module.exports = router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-controllers_authController.html">controllers/authController</a></li><li><a href="module-controllers_favoritesController.html">controllers/favoritesController</a></li><li><a href="module-controllers_messagingController.html">controllers/messagingController</a></li><li><a href="module-controllers_ownerRequestsController.html">controllers/ownerRequestsController</a></li><li><a href="module-controllers_propertiesController.html">controllers/propertiesController</a></li><li><a href="module-controllers_ratingsController.html">controllers/ratingsController</a></li><li><a href="module-controllers_uploadsController.html">controllers/uploadsController</a></li><li><a href="module-controllers_usersController.html">controllers/usersController</a></li><li><a href="module-db.html">db</a></li><li><a href="module-middlewares_auth.html">middlewares/auth</a></li><li><a href="module-middlewares_dbReady.html">middlewares/dbReady</a></li><li><a href="module-realtime_messaging.html">realtime/messaging</a></li><li><a href="module-realtime_socketTickets.html">realtime/socketTickets</a></li><li><a href="module-routes_api.html">routes/api</a></li><li><a href="module-routes_auth.html">routes/auth</a></li><li><a href="module-routes_index.html">routes/index</a></li><li><a href="module-routes_users.html">routes/users</a></li><li><a href="module-services_authService.html">services/authService</a></li><li><a href="module-services_conversationsService.html">services/conversationsService</a></li><li><a href="module-services_databaseQueue.html">services/databaseQueue</a></li><li><a href="module-services_favoritesService.html">services/favoritesService</a></li><li><a href="module-services_messagesService.html">services/messagesService</a></li><li><a href="module-services_ownerRequestsService.html">services/ownerRequestsService</a></li><li><a href="module-services_propertiesService.html">services/propertiesService</a></li><li><a href="module-services_ratingsService.html">services/ratingsService</a></li><li><a href="module-services_usersService.html">services/usersService</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Oct 14 2026 15:45:02 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

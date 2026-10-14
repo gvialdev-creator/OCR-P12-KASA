@@ -11,6 +11,11 @@ const inter = Inter({
   display: "swap",
 });
 
+/** Props du layout racine partagé par les routes de l’application. */
+export interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
 export const metadata: Metadata = {
   title: "Kasa",
   description: "Application de location immobilière Kasa",
@@ -19,7 +24,7 @@ export const metadata: Metadata = {
   }),
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="fr"

@@ -1,3 +1,7 @@
+/**
+ * Lecture et mise à jour des profils et rôles utilisateur.
+ * @module services/usersService
+ */
 async function listUsers(db) {
   return await db.allAsync('SELECT id, name, picture, role FROM users ORDER BY id DESC');
 }

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { useId } from "react";
 
-interface LogoProps {
+/** Variante compacte du logo utilisée dans les petits emplacements de navigation. */
+export interface LogoProps {
   compact?: boolean;
 }
 

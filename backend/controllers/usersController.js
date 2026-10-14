@@ -1,3 +1,7 @@
+/**
+ * Adapte les opérations de compte et de profil aux réponses HTTP.
+ * @module controllers/usersController
+ */
 const { listUsers, getUser, createUser, updateUser } = require('../services/usersService');
 const { changePassword: changeUserPassword } = require('../services/authService');
 

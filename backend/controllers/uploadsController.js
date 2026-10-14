@@ -1,3 +1,7 @@
+/**
+ * Reçoit les fichiers image et supprime les assets uploadés.
+ * @module controllers/uploadsController
+ */
 const path = require('path');
 const fs = require('fs');
 

@@ -11,7 +11,7 @@ import { getPropertyDetail } from "@/features/properties/services/get-property-d
 
 export const revalidate = 3600;
 
-interface PropertyPageProps {
+export interface PropertyPageProps {
   params: Promise<{ slug: string }>;
 }
 

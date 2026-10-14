@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: services/messagesService.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: services/messagesService.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Historique paginé, envois idempotents et curseurs de lecture.
+ * @module services/messagesService
+ */
+const { transaction } = require('./databaseQueue');
+const { fail, positiveId, membership } = require('./conversationsService');
+
+async function loadMessages(db, userId, conversationId, options = {}) {
+  const conversation = await membership(db, userId, conversationId);
+  if (options.before !== undefined &amp;&amp; options.after !== undefined) fail(400, 'Use before or after, not both');
+  const limit = options.limit === undefined ? 30 : positiveId(options.limit);
+  if (limit > 100) fail(400, 'Limit exceeds 100');
+  const after = options.after !== undefined;
+  const cursor = options.before ?? options.after;
+  if (cursor !== undefined) {
+    positiveId(cursor);
+    if (!await db.getAsync('SELECT id FROM messages WHERE id = ? AND conversation_id = ?', [cursor, conversation.id])) fail(400, 'Invalid message cursor');
+  }
+  const rows = await db.allAsync(`SELECT * FROM messages WHERE conversation_id = ?
+    ${cursor !== undefined ? `AND id ${after ? '>' : '&lt;'} ?` : ''}
+    ORDER BY id ${after ? 'ASC' : 'DESC'} LIMIT ?`, [conversation.id, ...(cursor !== undefined ? [cursor] : []), limit + 1]);
+  const messages = rows.slice(0, limit);
+  if (!after) messages.reverse();
+  return { messages, has_more: rows.length > limit };
+}
+
+/**
+ * Enregistre un message après vérification de l’appartenance à la conversation.
+ * Le UUID client rend les reprises réseau idempotentes : le même UUID et le
+ * même texte renvoient le message existant ; le réutiliser avec un autre texte
+ * produit une erreur 409. La création et la mise à jour de l’activité sont atomiques.
+ * @throws {Error} Erreur avec `status` 400/403/404/409 si le payload, les droits ou le UUID sont invalides.
+ */
+async function sendMessage(db, userId, conversationId, input = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) fail(400, 'Invalid message');
+  if (typeof input.body !== 'string' || !input.body.trim() || input.body.length > 4000) fail(400, 'Message must contain 1 to 4000 characters');
+  if (typeof input.client_message_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.client_message_id)) fail(400, 'Client message UUID required');
+  const body = input.body.trim();
+  return transaction(db, async () => {
+    const conversation = await membership(db, userId, conversationId);
+    const previous = await db.getAsync('SELECT * FROM messages WHERE conversation_id = ? AND sender_id = ? AND client_message_id = ?', [conversation.id, userId, input.client_message_id]);
+    if (previous) {
+      if (previous.body !== body) fail(409, 'UUID already used for another message');
+      return { message: previous, conversation, created: false };
+    }
+    const now = new Date().toISOString();
+    const result = await db.runAsync('INSERT INTO messages(conversation_id, sender_id, client_message_id, body, created_at) VALUES (?,?,?,?,?)', [conversation.id, userId, input.client_message_id, body, now]);
+    await db.runAsync('UPDATE conversations SET last_message_at = ? WHERE id = ?', [now, conversation.id]);
+    const message = await db.getAsync('SELECT * FROM messages WHERE id = ?', [result.lastID]);
+    return { message, conversation, created: true };
+  });
+}
+
+/** Avance de façon monotone le curseur de lecture vers un message de cette conversation. */
+async function markRead(db, userId, conversationId, messageId) {
+  messageId = positiveId(messageId);
+  return transaction(db, async () => {
+    const conversation = await membership(db, userId, conversationId);
+    if (!await db.getAsync('SELECT id FROM messages WHERE id = ? AND conversation_id = ?', [messageId, conversation.id])) fail(400, 'Message not in this conversation');
+    await db.runAsync(`INSERT INTO conversation_read_states(conversation_id, user_id, last_read_message_id, last_read_at) VALUES (?,?,?,?)
+      ON CONFLICT(conversation_id,user_id) DO UPDATE SET last_read_message_id = excluded.last_read_message_id, last_read_at = excluded.last_read_at
+      WHERE excluded.last_read_message_id > conversation_read_states.last_read_message_id`, [conversation.id, userId, messageId, new Date().toISOString()]);
+    const read_state = await db.getAsync('SELECT * FROM conversation_read_states WHERE conversation_id = ? AND user_id = ?', [conversation.id, userId]);
+    return { conversation, read_state };
+  });
+}
+
+module.exports = { loadMessages, sendMessage, markRead };</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-controllers_authController.html">controllers/authController</a></li><li><a href="module-controllers_favoritesController.html">controllers/favoritesController</a></li><li><a href="module-controllers_messagingController.html">controllers/messagingController</a></li><li><a href="module-controllers_ownerRequestsController.html">controllers/ownerRequestsController</a></li><li><a href="module-controllers_propertiesController.html">controllers/propertiesController</a></li><li><a href="module-controllers_ratingsController.html">controllers/ratingsController</a></li><li><a href="module-controllers_uploadsController.html">controllers/uploadsController</a></li><li><a href="module-controllers_usersController.html">controllers/usersController</a></li><li><a href="module-db.html">db</a></li><li><a href="module-middlewares_auth.html">middlewares/auth</a></li><li><a href="module-middlewares_dbReady.html">middlewares/dbReady</a></li><li><a href="module-realtime_messaging.html">realtime/messaging</a></li><li><a href="module-realtime_socketTickets.html">realtime/socketTickets</a></li><li><a href="module-routes_api.html">routes/api</a></li><li><a href="module-routes_auth.html">routes/auth</a></li><li><a href="module-routes_index.html">routes/index</a></li><li><a href="module-routes_users.html">routes/users</a></li><li><a href="module-services_authService.html">services/authService</a></li><li><a href="module-services_conversationsService.html">services/conversationsService</a></li><li><a href="module-services_databaseQueue.html">services/databaseQueue</a></li><li><a href="module-services_favoritesService.html">services/favoritesService</a></li><li><a href="module-services_messagesService.html">services/messagesService</a></li><li><a href="module-services_ownerRequestsService.html">services/ownerRequestsService</a></li><li><a href="module-services_propertiesService.html">services/propertiesService</a></li><li><a href="module-services_ratingsService.html">services/ratingsService</a></li><li><a href="module-services_usersService.html">services/usersService</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Oct 14 2026 15:45:02 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

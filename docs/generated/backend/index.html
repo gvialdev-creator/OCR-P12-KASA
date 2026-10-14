@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h1>Kasa Backend (API Express + SQLite)</h1>
+<p>Backend minimaliste pour l’application Kasa. Il expose une API REST (Express 5) documentée via OpenAPI, utilise SQLite pour le stockage des données, gère l’authentification par JWT et propose des fonctionnalités autour des biens (propriétés), des utilisateurs, des notes (ratings), des favoris, ainsi que l’upload et la suppression d’images.</p>
+<h2>Sommaire</h2>
+<ul>
+<li>Présentation</li>
+<li>Prérequis</li>
+<li>Installation &amp; démarrage</li>
+<li>Configuration (variables d’environnement)</li>
+<li>Base de données &amp; données de démo</li>
+<li>Documentation API (OpenAPI)</li>
+<li>Authentification &amp; rôles</li>
+<li>Routes principales</li>
+<li>Upload &amp; suppression d’images</li>
+<li>Exemples rapides (curl)</li>
+<li>Dépannage (FAQ)</li>
+</ul>
+<h2>Présentation</h2>
+<p>Ce projet fournit une API HTTP permettant de :</p>
+<ul>
+<li>Lister, créer, modifier, supprimer des propriétés (biens) et consulter leur détail.</li>
+<li>Gérer des utilisateurs et leurs informations publiques.</li>
+<li>Ajouter des notes (ratings) sur les propriétés.</li>
+<li>Gérer des favoris (properties préférées) par utilisateur connecté.</li>
+<li>Envoyer des images et récupérer une URL publique; supprimer une ou plusieurs images et nettoyer leurs références en base.</li>
+</ul>
+<p>Le serveur est écrit avec Express 5 et persiste les données dans un fichier SQLite. Les routes sont sécurisées par des middlewares d’authentification/autorisation basés sur JWT.</p>
+<h3>Flux de traitement d’une requête</h3>
+<p>Les routes de <code>routes/</code> associent une méthode/URL aux middlewares puis au controller. Les controllers traduisent la requête HTTP en appels métier ; les services de <code>services/</code> appliquent les règles et accèdent à SQLite. <code>databaseQueue</code> sérialise les opérations de la connexion partagée et fournit les transactions nécessaires aux écritures atomiques. Les réponses et statuts HTTP restent dans les controllers ; les règles métier ne doivent pas dépendre de l’interface frontend.</p>
+<h2>Prérequis</h2>
+<ul>
+<li>Node.js 20.9+ recommandé pour le workspace complet (Next.js 16). Le script backend local utilise <code>node --env-file</code>, disponible dans les versions Node récentes.</li>
+<li>npm</li>
+</ul>
+<h2>Installation &amp; démarrage</h2>
+<ol>
+<li>Installer les dépendances:
+<ul>
+<li>npm install</li>
+</ul>
+</li>
+<li>Lancer le serveur:
+<ul>
+<li>npm start</li>
+</ul>
+</li>
+<li>Le serveur écoute sur le port défini par <code>PORT</code>. Sans variable, <code>bin/www</code> utilise 3000 ; <code>backend/.env.example</code> fixe <code>PORT=3001</code>.</li>
+</ol>
+<h2>Configuration (variables d’environnement)</h2>
+<p>La messagerie utilise aussi <code>MESSAGING_SOCKET_SECRET</code> (secret serveur distinct recommande)
+et <code>MESSAGING_FRONTEND_ORIGINS</code> (origines exactes separees par des virgules, sans slash final).
+Sans origine configuree, les connexions Socket.IO sont refusees.
+Le frontend configure <code>NEXT_PUBLIC_MESSAGING_SOCKET_URL</code> vers le serveur Express,
+pas vers une Server Action ou un rewrite Next. Les exemples <code>.env.example</code> ne contiennent aucun secret reel.</p>
+<ul>
+<li>
+<p>PORT: port d’écoute HTTP (par défaut 3000).</p>
+</li>
+<li>
+<p>JWT_SECRET: secret pour signer/vérifier les tokens JWT (par défaut &quot;change-me-in-prod&quot;). En production, définissez une valeur forte et secrète.</p>
+</li>
+<li>
+<p>DB_PATH (optionnel): chemin du fichier SQLite. Par défaut, <code>backend/data/kasa.sqlite3</code> en local et <code>/app/data/kasa.sqlite3</code> en production. Un chemin relatif est résolu depuis le dossier <code>backend</code>.</p>
+</li>
+<li>
+<p>JWT_EXPIRES_IN (optionnel): durée du JWT de session (par défaut <code>7d</code>).</p>
+</li>
+</ul>
+<p>Vous pouvez lancer le serveur avec, par exemple:</p>
+<ul>
+<li>JWT_SECRET=&quot;votre-secret&quot; PORT=3000 npm start</li>
+</ul>
+<p>Pour la suite complète de tests backend, installer également les dépendances frontend : le test Socket.IO partagé charge <code>socket.io-client</code> depuis <code>frontend/node_modules</code>. Depuis la racine, lancez <code>yarn --cwd frontend install</code>, puis exécutez depuis <code>backend/</code> :</p>
+<pre class="prettyprint source lang-sh"><code>node --test
+</code></pre>
+<h2>Base de données &amp; données de démo</h2>
+<ul>
+<li>SGBD: SQLite. Le fichier local par défaut est <code>data/kasa.sqlite3</code>; en production, le chemin par défaut est <code>/app/data/kasa.sqlite3</code>. <code>DB_PATH</code> permet de choisir un autre chemin.</li>
+<li>Le dossier parent du fichier est créé automatiquement si nécessaire. En production, montez un stockage persistant et inscriptible sur <code>/app/data</code> (ou sur le dossier parent indiqué par <code>DB_PATH</code>); un dossier du conteneur éphémère ne garantit pas la conservation des données après redéploiement.</li>
+<li>À chaque démarrage, le schéma et ses migrations sont appliqués. En local, si aucune propriété n’existe, un seed est effectué depuis <code>data/properties.json</code> (si présent). Ce seed de démonstration est désactivé en production.</li>
+<li>Le schéma inclut : <code>users</code>, <code>properties</code>, <code>property_pictures</code>, <code>property_equipments</code>, <code>property_tags</code>, <code>ratings</code>, <code>favorites</code>, <code>owner_requests</code>, <code>conversations</code>, <code>messages</code> et <code>conversation_read_states</code>.</li>
+<li>Les migrations sont appliquées au démarrage par le code d’initialisation SQLite. Elles sont incrémentales et idempotentes, mais il n’y a pas de registre central de versions de migration.</li>
+<li>Les slugs des propriétés sont générés automatiquement et uniques.</li>
+</ul>
+<p>Sauvegarde: sauvegardez le fichier SQLite configuré par <code>DB_PATH</code> (ou le chemin par défaut de l’environnement). Le changement de chemin ne copie pas une base existante. En local, pour repartir de zéro, arrêtez le serveur et supprimez <code>data/kasa.sqlite3</code>, puis relancez-le pour recréer le schéma et charger le seed.</p>
+<h2>Documentation API (OpenAPI)</h2>
+<p>La spécification OpenAPI dans <code>public/openapi.json</code> est la référence pour les paramètres, schémas, codes HTTP et réponses REST. L’interface HTML est servie par <code>/docs.html</code> lorsque le backend est lancé. Ce README donne seulement un aperçu des routes et des règles transversales.</p>
+<p>Le site JSDoc généré du backend est disponible dans <a href="../docs/generated/backend/index.html"><code>docs/generated/backend/index.html</code></a>. Modifiez les commentaires JSDoc dans les sources <code>.js</code>, puis lancez <code>npm run docs:generate</code> depuis <code>backend/</code> (ou <code>npm --prefix backend run docs:generate</code> depuis la racine). Versionnez les fichiers HTML régénérés avec les commentaires source.</p>
+<h3>Messagerie privee</h3>
+<p><code>POST /api/conversations</code> reprend une paire canonique via <code>recipient_id</code>. Tous les roles
+peuvent participer ; aucune liaison avec un logement, aucune piece jointe, aucun acces
+admin aux conversations d'autrui. Le bouton de fiche utilise <code>host.id</code> et pas l'id du logement.
+<code>GET /api/conversations</code> retourne les discussions, apercus, non-lus et un curseur d'activite
+opaque stable (<code>before=next_cursor</code>). <code>GET /api/conversations/:id</code> retourne la discussion.
+<code>GET /api/conversations/:id/messages</code> utilise <code>before</code> pour l'historique ou <code>after</code>
+pour le rattrapage (exclusifs, limite 30 par defaut, 100 maximum, ordre croissant).
+<code>POST /api/conversations/:id/messages</code> prend <code>body</code> (1-4000 caracteres) et
+<code>client_message_id</code> (UUID stable lors d'un retry). Meme UUID/texte = meme message ;
+texte different = 409. <code>PATCH /api/conversations/:id/read</code> avance seulement le curseur
+valide de l'utilisateur authentifie. Les transactions et operations SQLite partagees
+sont serialisees, y compris les decisions owner, sans intercaler des ecritures.
+Les messages sont conserves en SQLite ; pas de suppression/cascade dans ce lot.</p>
+<p>Le cookie HttpOnly reste sur le serveur Next. Une Server Action obtient
+<code>POST /api/messaging/socket-token</code> : ticket HS256 de cinq minutes maximum, borne par
+l'expiration de session, audience <code>messaging-socket</code>, emetteur <code>kasa-messaging</code>.
+Ce ticket est refuse en REST ; le JWT REST est refuse par la socket. L'origine est
+controlee en CORS et au handshake, le compte est relu en base et la socket expire
+avec son ticket. Le client renouvelle le ticket, nettoie listeners/timers et rattrape
+toutes les pages REST apres reconnexion. Rooms <code>user:&lt;id&gt;</code> assignees seulement serveur.
+Limites par utilisateur/minute : 60 envois, 30 creations, 120 lectures, 20 tickets ;
+limiteur en memoire (pour plusieurs instances, utiliser un stockage partage).
+Corps JSON limites a 32 Ko. Ne jamais journaliser les tickets, JWT ou textes prives.</p>
+<p>La frontiere <code>publishMessageCreated</code> intervient apres commit. Contrat version 1 :
+<code>event_id=message:&lt;id&gt;</code>, <code>message_id</code>, <code>conversation_id</code>, <code>sender_id</code>, <code>recipient_id</code>,
+<code>occurred_at</code>, <code>message</code>. <code>messaging:read-updated</code> porte <code>conversation_id</code> et <code>read_state</code>.
+Ces evenements sont prives et non durables. Une prochaine phase pourra ajouter
+outbox transactionnelle, worker et preferences ; aucun badge global, email ou web push
+n'est implemente ici. REST reste l'autorite apres perte d'evenements/redemarrage.
+Le reverse proxy doit supporter upgrade WebSocket et polling Socket.IO.
+Utiliser HTTPS et des secrets forts en production. Le fallback historique JWT de
+developpement doit etre remplace ; la messagerie refuse un secret absent en production.</p>
+<p>Recette sans comptes reels : <code>PORT=3101 MESSAGING_FRONTEND_ORIGINS=http://localhost:3102 node scripts/messaging-preview.js</code>.
+Le script refuse la production et utilise une base temporaire supprimee a l'arret.
+Comptes <code>marie@messaging.test</code>, <code>jean@messaging.test</code>, <code>admin@messaging.test</code>,
+mot de passe de demonstration uniquement <code>PreviewOnly123!</code>. Ne pas deployer ce script.
+Frontend : <code>API_BASE_URL=http://localhost:3101 NEXT_PUBLIC_MESSAGING_SOCKET_URL=http://localhost:3101 NEXT_DIST_DIR=.next-messaging yarn dev --port 3102</code>.
+<code>NEXT_DIST_DIR</code> permet la recette isolee sans perturber le build/dev existant.</p>
+<p><code>GET /api/conversations/with/:recipientId</code> est aussi disponible pour vérifier si une conversation existe avec un destinataire. Il exige une session; un identifiant invalide ou une tentative de se contacter soi-même renvoie une erreur <code>400</code>.</p>
+<ul>
+<li>Spécification: public/openapi.json</li>
+<li>UI de test/exploration: <code>/docs.html</code> sur l’origine/port du backend (3000 par défaut si <code>PORT</code> n’est pas défini).</li>
+</ul>
+<p>Les opérations REST sont groupées dans OpenAPI sous Auth, Properties, Users, Ratings, Favorites, Uploads, Owner requests et Messaging. Les schémas de requête/réponse sont détaillés dans la spec.</p>
+<h2>Authentification &amp; rôles</h2>
+<ul>
+<li>Authentification: JWT via l’en-tête Authorization: Bearer <token>.</li>
+<li>Secret: JWT_SECRET</li>
+<li>Rôles supportés: client, owner, admin.
+<ul>
+<li>Certaines routes nécessitent d’être connecté (requireAuth).</li>
+<li>D’autres nécessitent un rôle spécifique, par ex. owner ou admin pour créer/mettre à jour/supprimer des propriétés, ou pour les uploads.</li>
+<li>Certaines routes autorisent self-or-admin (ex: consulter/mettre à jour son propre profil ou administrateur).</li>
+</ul>
+</li>
+</ul>
+<p>Endpoints d’auth principaux (voir OpenAPI pour le détail):</p>
+<ul>
+<li>POST /auth/register: inscription email/mot de passe ; toute nouvelle inscription reçoit le rôle <code>client</code>. Les rôles <code>owner</code> et <code>admin</code> ne sont pas attribués par cette route publique.</li>
+<li>POST /auth/login: authentification, retourne un token JWT</li>
+<li>POST /auth/request-reset, POST /auth/reset-password: flux de réinitialisation de mot de passe (pour développement, le token peut être renvoyé dans la réponse lorsque ce n’est pas en production).</li>
+</ul>
+<h2>Routes principales (aperçu)</h2>
+<p>Base: /api</p>
+<ul>
+<li>
+<p>GET /api/properties: liste des propriétés</p>
+</li>
+<li>
+<p>GET /api/properties/:id: détail d’une propriété</p>
+</li>
+<li>
+<p>GET /api/properties/slug/:slug: détail d’une propriété par slug (URL publique canonique du frontend)</p>
+</li>
+<li>
+<p>POST /api/properties: création (rôle: owner ou admin)</p>
+</li>
+<li>
+<p>PATCH /api/properties/:id: mise à jour (rôle: owner ou admin)</p>
+</li>
+<li>
+<p>DELETE /api/properties/:id: suppression (rôle: owner ou admin)</p>
+</li>
+<li>
+<p>GET /api/users: liste (admin)</p>
+</li>
+<li>
+<p>GET /api/users/:id: détail (self ou admin)</p>
+</li>
+<li>
+<p>POST /api/users: création (admin)</p>
+</li>
+<li>
+<p>PATCH /api/users/:id: mise à jour du nom, de l’email et de la photo (self ou admin; le rôle ne peut pas être modifié ici)</p>
+</li>
+<li>
+<p>PATCH /api/users/:id/password: modification du mot de passe (self ou admin)</p>
+</li>
+<li>
+<p>GET /api/properties/:id/ratings: lister les notes d’une propriété</p>
+</li>
+<li>
+<p>POST /api/properties/:id/ratings: ajouter une note</p>
+</li>
+<li>
+<p>POST /api/properties/:id/favorite: ajouter aux favoris (utilisateur connecté)</p>
+</li>
+<li>
+<p>DELETE /api/properties/:id/favorite: retirer des favoris (utilisateur connecté)</p>
+</li>
+<li>
+<p>GET /api/users/:id/favorites: lister les favoris d’un utilisateur (self ou admin)</p>
+</li>
+<li>
+<p>POST /api/uploads/image: uploader une image (rôle: owner ou admin). Répond avec une URL publique /uploads/... et des instructions pour l’utiliser (cover, gallery, etc.).</p>
+</li>
+<li>
+<p>DELETE /api/uploads/images: supprimer une ou plusieurs images (rôle: owner ou admin). Accepte des noms de fichiers ou des URLs; nettoie les références en base.</p>
+</li>
+<li>
+<p>POST /api/owner-requests: un client authentifié soumet une demande owner (identité tirée de la session)</p>
+</li>
+<li>
+<p>GET /api/owner-requests/me: consulter sa dernière demande (client authentifié)</p>
+</li>
+<li>
+<p>GET /api/admin/owner-requests: lister les demandes en attente (admin)</p>
+</li>
+<li>
+<p>PATCH /api/admin/owner-requests/:id: accepter ou refuser une demande (admin)</p>
+</li>
+</ul>
+<p>Les routes <code>/api</code> et <code>/auth</code> peuvent répondre <code>503 Database not ready</code> pendant l’initialisation de SQLite. L’API HTTP est documentée dans <code>public/openapi.json</code>; les opérations REST détaillées sont consultables sur <code>/docs.html</code>.</p>
+<h2>Limites de comportement à connaître</h2>
+<ul>
+<li>Les mutations <code>PATCH</code> et <code>DELETE</code> d’un logement vérifient le rôle <code>owner</code> ou <code>admin</code>, mais le contrôleur ne vérifie pas que le logement appartient à l’owner connecté. Le service de mise à jour accepte actuellement <code>host_id</code>. Ne considérez donc pas le rôle owner comme une isolation par propriété.</li>
+<li>La route publique <code>POST /api/properties/:id/ratings</code> n’exige actuellement pas de bearer token et utilise le <code>user_id</code> fourni dans le corps. Elle valide le score entre 1 et 5 et l’existence du compte, mais l’identité n’est pas liée à la session. Il n’existe pas de parcours rating dans le frontend à ce jour ; traitez l’identité et l’autorisation de cette route comme un point à arbitrer, pas comme une fonctionnalité de notation authentifiée.</li>
+<li>L’upload valide le préfixe du MIME déclaré et limite le fichier à 10 MiB ; il ne vérifie pas la signature réelle du contenu. Si <code>property_id</code> est invalide, la vérification intervient après l’écriture du fichier et celui-ci peut rester orphelin. Suppression disque et nettoyage SQLite sont des opérations distinctes, non atomiques.</li>
+<li>La réinitialisation de mot de passe est exposée par l’API, mais le frontend n’a pas de formulaire correspondant. Les nouvelles inscriptions par cette API reçoivent toujours le rôle <code>client</code> ; un admin peut créer directement un utilisateur sans identifiants via <code>POST /api/users</code>.</li>
+</ul>
+<h2>Upload &amp; suppression d’images</h2>
+<ul>
+<li>Dossier public: public/uploads (servi statiquement par Express)</li>
+<li>Upload (multipart/form-data): champ <code>file</code> obligatoire, un fichier au plus, 10 MiB maximum. Le contrôle repose sur le type MIME déclaré comme <code>image/*</code>, pas sur la signature réelle du fichier. Champs optionnels: <code>purpose</code> (valeurs suggérées <code>property-cover</code>, <code>property-picture</code>, <code>user-picture</code>, <code>other</code>, mais chaîne non contrainte) et <code>property_id</code> (validation d’existence après l’écriture du fichier).</li>
+<li>Réponse: url, filename, size, mimetype, purpose, instructions pour l’usage suivant.</li>
+<li>Suppression: DELETE /api/uploads/images accepte dans le body JSON filename, filenames[], url, urls[] (ou équivalents en query). Sécurisé contre la traversée de chemins.</li>
+</ul>
+<h2>Exemples rapides (curl)</h2>
+<p>Authentification (login):</p>
+<ul>
+<li>curl -s -X POST http://localhost:3000/auth/login -H 'Content-Type: application/json' -d '{&quot;email&quot;:&quot;alice@example.com&quot;,&quot;password&quot;:&quot;secret123&quot;}'</li>
+</ul>
+<p>Uploader une image (nécessite un token et un rôle owner/admin):</p>
+<ul>
+<li>curl -s -X POST http://localhost:3000/api/uploads/image <br>
+-H &quot;Authorization: Bearer $TOKEN&quot; <br>
+-F file=@/chemin/vers/image.jpg <br>
+-F purpose=property-cover <br>
+-F property_id=chez-alice</li>
+</ul>
+<p>Supprimer des images (par URL):</p>
+<ul>
+<li>curl -s -X DELETE http://localhost:3000/api/uploads/images <br>
+-H 'Authorization: Bearer $TOKEN' <br>
+-H 'Content-Type: application/json' <br>
+-d '{&quot;urls&quot;:[&quot;/uploads/1692971234-a1b2c3d4.jpg&quot;,&quot;/uploads/1692971299-ffeedd.png&quot;]}'</li>
+</ul>
+<p>Créer une propriété (owner/admin):</p>
+<ul>
+<li>curl -s -X POST http://localhost:3000/api/properties <br>
+-H 'Authorization: Bearer $TOKEN' <br>
+-H 'Content-Type: application/json' <br>
+-d '{&quot;title&quot;:&quot;Charmant Studio&quot;,&quot;host_id&quot;:1,&quot;price_per_night&quot;:95}'</li>
+</ul>
+<h2>Dépannage (FAQ)</h2>
+<ul>
+<li>401 authentication required: ajoutez l’en-tête Authorization: Bearer <token> (obtenu via /auth/login).</li>
+<li>403 insufficient role / forbidden: l’utilisateur connecté n’a pas le rôle requis (owner/admin) ou n’est pas autorisé sur la ressource (self-or-admin requis).</li>
+<li>409 duplicate/UNIQUE: tentative de création d’un enregistrement avec un id/valeur unique déjà existant.</li>
+<li>Upload non disponible: assurez-vous que la dépendance multer est installée (elle l’est par défaut via package.json) et que vous envoyez bien un champ file.</li>
+<li>Port déjà utilisé: changez PORT ou libérez le port.</li>
+<li>Repartir de zéro: stoppez le serveur, supprimez data/kasa.sqlite3, relancez (recréation du schéma et seed depuis data/properties.json si disponible).</li>
+</ul></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-controllers_authController.html">controllers/authController</a></li><li><a href="module-controllers_favoritesController.html">controllers/favoritesController</a></li><li><a href="module-controllers_messagingController.html">controllers/messagingController</a></li><li><a href="module-controllers_ownerRequestsController.html">controllers/ownerRequestsController</a></li><li><a href="module-controllers_propertiesController.html">controllers/propertiesController</a></li><li><a href="module-controllers_ratingsController.html">controllers/ratingsController</a></li><li><a href="module-controllers_uploadsController.html">controllers/uploadsController</a></li><li><a href="module-controllers_usersController.html">controllers/usersController</a></li><li><a href="module-db.html">db</a></li><li><a href="module-middlewares_auth.html">middlewares/auth</a></li><li><a href="module-middlewares_dbReady.html">middlewares/dbReady</a></li><li><a href="module-realtime_messaging.html">realtime/messaging</a></li><li><a href="module-realtime_socketTickets.html">realtime/socketTickets</a></li><li><a href="module-routes_api.html">routes/api</a></li><li><a href="module-routes_auth.html">routes/auth</a></li><li><a href="module-routes_index.html">routes/index</a></li><li><a href="module-routes_users.html">routes/users</a></li><li><a href="module-services_authService.html">services/authService</a></li><li><a href="module-services_conversationsService.html">services/conversationsService</a></li><li><a href="module-services_databaseQueue.html">services/databaseQueue</a></li><li><a href="module-services_favoritesService.html">services/favoritesService</a></li><li><a href="module-services_messagesService.html">services/messagesService</a></li><li><a href="module-services_ownerRequestsService.html">services/ownerRequestsService</a></li><li><a href="module-services_propertiesService.html">services/propertiesService</a></li><li><a href="module-services_ratingsService.html">services/ratingsService</a></li><li><a href="module-services_usersService.html">services/usersService</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Oct 14 2026 15:45:02 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

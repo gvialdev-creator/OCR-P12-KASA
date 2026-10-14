@@ -1,3 +1,7 @@
+/**
+ * Sérialise les appels asynchrones et transactions sur une connexion SQLite partagée.
+ * @module services/databaseQueue
+ */
 const { AsyncLocalStorage } = require('node:async_hooks');
 
 const context = new AsyncLocalStorage();
@@ -27,7 +31,7 @@ function installQueue(db) {
  * l’opération courante réutilisent son contexte. En cas d’échec, la transaction
  * est annulée puis l’erreur d’origine est propagée.
  * @param {object} db Connexion SQLite munie des méthodes Async.
- * @param {() => Promise<unknown>} operation Travail effectué dans la transaction.
+ * @param {Function} operation Travail asynchrone effectué dans la transaction.
  * @returns {Promise<unknown>} Résultat de l’opération après validation du commit.
  */
 function transaction(db, operation) {

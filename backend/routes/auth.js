@@ -1,3 +1,7 @@
+/**
+ * Déclare les endpoints publics d’inscription, connexion et réinitialisation.
+ * @module routes/auth
+ */
 const express = require('express');
 const router = express.Router();
 

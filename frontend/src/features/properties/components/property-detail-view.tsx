@@ -4,7 +4,8 @@ import { PropertyCarousel } from "./property-carousel";
 import { PropertyHostCard } from "./property-host-card";
 import { PropertyInformation } from "./property-information";
 
-interface PropertyDetailViewProps {
+/** Détail complet d’un logement à afficher dans la page de fiche. */
+export interface PropertyDetailViewProps {
   property: PropertyDetail;
 }
 

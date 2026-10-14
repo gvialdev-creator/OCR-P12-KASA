@@ -4,7 +4,8 @@ import { useId, useState, type ReactNode } from "react";
 
 import { ArrowUpIcon } from "@/components/ui/icons";
 
-interface CollapsibleSectionProps {
+/** Contenu et état initial d’une section repliable. */
+export interface CollapsibleSectionProps {
   children: ReactNode;
   defaultOpen?: boolean;
   title: string;

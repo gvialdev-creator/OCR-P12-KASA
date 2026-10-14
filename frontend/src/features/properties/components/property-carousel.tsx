@@ -9,7 +9,8 @@ import {
   PlayIcon,
 } from "@/components/ui/icons";
 
-interface PropertyCarouselProps {
+/** Images et titre accessible du carrousel d’une fiche logement. */
+export interface PropertyCarouselProps {
   images: string[];
   title: string;
 }

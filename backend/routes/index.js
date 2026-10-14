@@ -1,3 +1,7 @@
+/**
+ * Routes de présentation et accès à la documentation HTML de l’API.
+ * @module routes/index
+ */
 const express = require('express');
 const router = express.Router();
 

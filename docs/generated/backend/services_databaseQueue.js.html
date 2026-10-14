@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: services/databaseQueue.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: services/databaseQueue.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Sérialise les appels asynchrones et transactions sur une connexion SQLite partagée.
+ * @module services/databaseQueue
+ */
+const { AsyncLocalStorage } = require('node:async_hooks');
+
+const context = new AsyncLocalStorage();
+const queues = new WeakMap();
+
+function enqueue(db, operation) {
+  if (context.getStore() === db) return operation();
+  const result = (queues.get(db) || Promise.resolve()).then(() => context.run(db, operation));
+  queues.set(db, result.catch(() => {}));
+  return result;
+}
+
+/** Installe une file d’exécution unique sur les méthodes Async de la connexion. */
+function installQueue(db) {
+  if (queues.has(db)) return;
+  queues.set(db, Promise.resolve());
+  for (const method of ['runAsync', 'getAsync', 'allAsync', 'execAsync']) {
+    if (typeof db[method] !== 'function') continue;
+    const original = db[method].bind(db);
+    db[method] = (...args) => enqueue(db, () => original(...args));
+  }
+}
+
+/**
+ * Exécute une opération SQLite atomique sur la connexion partagée.
+ * Les opérations sont sérialisées par connexion ; les appels imbriqués dans
+ * l’opération courante réutilisent son contexte. En cas d’échec, la transaction
+ * est annulée puis l’erreur d’origine est propagée.
+ * @param {object} db Connexion SQLite munie des méthodes Async.
+ * @param {Function} operation Travail asynchrone effectué dans la transaction.
+ * @returns {Promise&lt;unknown>} Résultat de l’opération après validation du commit.
+ */
+function transaction(db, operation) {
+  return enqueue(db, async () => {
+    await db.execAsync('BEGIN IMMEDIATE');
+    try {
+      const result = await operation();
+      await db.execAsync('COMMIT');
+      return result;
+    } catch (error) {
+      await db.execAsync('ROLLBACK').catch(() => {});
+      throw error;
+    }
+  });
+}
+
+module.exports = { installQueue, transaction };</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-controllers_authController.html">controllers/authController</a></li><li><a href="module-controllers_favoritesController.html">controllers/favoritesController</a></li><li><a href="module-controllers_messagingController.html">controllers/messagingController</a></li><li><a href="module-controllers_ownerRequestsController.html">controllers/ownerRequestsController</a></li><li><a href="module-controllers_propertiesController.html">controllers/propertiesController</a></li><li><a href="module-controllers_ratingsController.html">controllers/ratingsController</a></li><li><a href="module-controllers_uploadsController.html">controllers/uploadsController</a></li><li><a href="module-controllers_usersController.html">controllers/usersController</a></li><li><a href="module-db.html">db</a></li><li><a href="module-middlewares_auth.html">middlewares/auth</a></li><li><a href="module-middlewares_dbReady.html">middlewares/dbReady</a></li><li><a href="module-realtime_messaging.html">realtime/messaging</a></li><li><a href="module-realtime_socketTickets.html">realtime/socketTickets</a></li><li><a href="module-routes_api.html">routes/api</a></li><li><a href="module-routes_auth.html">routes/auth</a></li><li><a href="module-routes_index.html">routes/index</a></li><li><a href="module-routes_users.html">routes/users</a></li><li><a href="module-services_authService.html">services/authService</a></li><li><a href="module-services_conversationsService.html">services/conversationsService</a></li><li><a href="module-services_databaseQueue.html">services/databaseQueue</a></li><li><a href="module-services_favoritesService.html">services/favoritesService</a></li><li><a href="module-services_messagesService.html">services/messagesService</a></li><li><a href="module-services_ownerRequestsService.html">services/ownerRequestsService</a></li><li><a href="module-services_propertiesService.html">services/propertiesService</a></li><li><a href="module-services_ratingsService.html">services/ratingsService</a></li><li><a href="module-services_usersService.html">services/usersService</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Oct 14 2026 15:45:02 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

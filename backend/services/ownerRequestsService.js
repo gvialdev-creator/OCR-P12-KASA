@@ -1,3 +1,7 @@
+/**
+ * Cycle de vie transactionnel des demandes d’accès au rôle owner.
+ * @module services/ownerRequestsService
+ */
 function createError(message, status) {
   const error = new Error(message);
   error.status = status;

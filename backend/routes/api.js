@@ -1,3 +1,7 @@
+/**
+ * Déclare les endpoints REST, readiness et middlewares d’autorisation API.
+ * @module routes/api
+ */
 const express = require('express');
 const router = express.Router();
 

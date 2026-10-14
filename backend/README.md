@@ -77,6 +77,8 @@ Sauvegarde: sauvegardez le fichier SQLite configuré par `DB_PATH` (ou le chemin
 
 La spécification OpenAPI dans `public/openapi.json` est la référence pour les paramètres, schémas, codes HTTP et réponses REST. L’interface HTML est servie par `/docs.html` lorsque le backend est lancé. Ce README donne seulement un aperçu des routes et des règles transversales.
 
+Le site JSDoc généré du backend est disponible dans [`docs/generated/backend/index.html`](../docs/generated/backend/index.html). Modifiez les commentaires JSDoc dans les sources `.js`, puis lancez `npm run docs:generate` depuis `backend/` (ou `npm --prefix backend run docs:generate` depuis la racine). Versionnez les fichiers HTML régénérés avec les commentaires source.
+
 ### Messagerie privee
 
 `POST /api/conversations` reprend une paire canonique via `recipient_id`. Tous les roles

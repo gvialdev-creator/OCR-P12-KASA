@@ -1,3 +1,7 @@
+/**
+ * Handshake Socket.IO, rooms privées et diffusion des événements après commit.
+ * @module realtime/messaging
+ */
 const { Server } = require('socket.io');
 const { verifyTicket } = require('./socketTickets');
 

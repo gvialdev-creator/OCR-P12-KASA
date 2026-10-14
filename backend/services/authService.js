@@ -1,3 +1,7 @@
+/**
+ * Inscription, authentification JWT et cycle de réinitialisation des mots de passe.
+ * @module services/authService
+ */
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 

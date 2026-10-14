@@ -1,3 +1,7 @@
+/**
+ * Adapte les requêtes HTTP d’authentification aux services métier.
+ * @module controllers/authController
+ */
 const { register, login, requestPasswordReset, resetPassword } = require('../services/authService');
 
 function statusFromError(e) {

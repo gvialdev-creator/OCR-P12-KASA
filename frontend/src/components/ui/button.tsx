@@ -5,15 +5,18 @@ import type {
   ReactNode,
 } from "react";
 
-interface SharedButtonProps {
+/** Options communes aux boutons natifs et liens présentés comme boutons. */
+export interface SharedButtonProps {
   icon?: ReactNode;
   iconOnly?: boolean;
 }
 
-interface ButtonProps
+/** Props du bouton d’action, en plus des attributs HTML standards. */
+export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>, SharedButtonProps {}
 
-interface ButtonLinkProps
+/** Props d’un lien de navigation stylé comme un bouton. */
+export interface ButtonLinkProps
   extends AnchorHTMLAttributes<HTMLAnchorElement>, SharedButtonProps {
   href: string;
 }

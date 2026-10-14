@@ -121,3 +121,5 @@ Le sitemap est une liste d’URL à explorer, pas une garantie d’indexation. `
 ## Documentation associée
 
 Les contrats HTTP (paramètres, schémas et réponses) sont décrits dans [l’OpenAPI du backend](../backend/public/openapi.json) et consultables via `/docs.html` lorsque l’API tourne. Les commentaires TSDoc proches des services précisent seulement les règles locales qui ne ressortent pas déjà des types ou de cette vue d’ensemble.
+
+Le site TypeDoc généré pour le frontend est disponible dans [`docs/generated/frontend/index.html`](../docs/generated/frontend/index.html). Modifiez les commentaires TSDoc dans les fichiers `.ts`/`.tsx`, puis lancez `yarn docs:generate` depuis `frontend/` (ou `yarn --cwd frontend docs:generate` depuis la racine). Versionnez avec les sources les fichiers HTML régénérés.

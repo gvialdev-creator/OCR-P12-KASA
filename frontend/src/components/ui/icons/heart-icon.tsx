@@ -1,6 +1,7 @@
 import type { SVGProps } from "react";
 
-interface HeartIconProps extends SVGProps<SVGSVGElement> {
+/** États visuels du cœur SVG utilisé par les contrôles de favoris. */
+export interface HeartIconProps extends SVGProps<SVGSVGElement> {
   filled?: boolean;
   outline?: boolean;
 }

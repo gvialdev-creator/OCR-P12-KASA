@@ -7,7 +7,8 @@ import { getSessionUser } from "@/features/auth/services/has-valid-session";
 import { StartMessageButton } from "@/features/messages/components/start-message-button";
 import { hasConversationWithUser } from "@/features/messages/services/messaging";
 
-interface PropertyHostCardProps {
+/** Logement dont les informations d’hôte et l’action de contact sont affichées. */
+export interface PropertyHostCardProps {
   property: PropertyDetail;
 }
 

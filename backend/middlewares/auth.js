@@ -1,3 +1,7 @@
+/**
+ * Authentifie les JWT et applique les règles d’accès basées sur le rôle courant.
+ * @module middlewares/auth
+ */
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-prod';

@@ -1,3 +1,7 @@
+/**
+ * Connexion SQLite, schéma, migrations et seed local de démonstration.
+ * @module db
+ */
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();

@@ -1,3 +1,7 @@
+/**
+ * Adapte les demandes de rôle owner aux réponses HTTP.
+ * @module controllers/ownerRequestsController
+ */
 const {
   getMyLatestRequest,
   submitOwnerRequest,

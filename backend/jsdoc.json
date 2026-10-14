@@ -1,0 +1,24 @@
+{
+  "plugins": ["plugins/markdown"],
+  "source": {
+    "include": [
+      "app.js",
+      "bin",
+      "db.js",
+      "routes",
+      "controllers",
+      "middlewares",
+      "services",
+      "realtime"
+    ],
+    "includePattern": ".+\\.js$",
+    "excludePattern": "(^|[/\\\\])(test|public|node_modules)([/\\\\]|$)"
+  },
+  "opts": {
+    "recurse": true,
+    "undocumented": true,
+    "destination": "../docs/generated/backend",
+    "readme": "README.md",
+    "encoding": "utf8"
+  }
+}

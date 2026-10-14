@@ -2,7 +2,8 @@ import type { Property } from "@/domain/types/property";
 
 import { PropertyCard } from "./property-card";
 
-interface PropertyGridProps {
+/** Annonces à afficher et états de favoris facultatifs de la grille. */
+export interface PropertyGridProps {
   properties: Property[];
   favoriteIds?: string[];
   isAuthenticated?: boolean;

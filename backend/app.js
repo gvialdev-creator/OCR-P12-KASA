@@ -1,3 +1,7 @@
+/**
+ * Configuration Express, montage des routes et initialisation de SQLite.
+ * @module app
+ */
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');

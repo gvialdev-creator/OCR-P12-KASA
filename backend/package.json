@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-  "start": "if [ \"$NODE_ENV\" = \"production\" ]; then node ./bin/www; else node --env-file=.env ./bin/www; fi"
+  "docs:generate": "jsdoc -c jsdoc.json",
+    "start": "if [ \"$NODE_ENV\" = \"production\" ]; then node ./bin/www; else node --env-file=.env ./bin/www; fi"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -14,5 +15,8 @@
     "multer": "^2.0.2",
     "socket.io": "^4.8.4",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "jsdoc": "^4.0.5"
   }
 }

@@ -62,7 +62,8 @@ function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: st
   );
 }
 
-interface AccountFormsProps {
+/** Données de session utilisées pour préremplir les formulaires du compte. */
+export interface AccountFormsProps {
   user: SessionUser;
   givenName: string;
   familyName: string;

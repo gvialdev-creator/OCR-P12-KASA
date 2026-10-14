@@ -11,7 +11,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+/** Paramètres de recherche utilisés par la route de connexion. */
+export interface LoginPageProps {
+  params: Promise<Record<string, never>>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { registered, returnTo } = await searchParams;
   const safeReturnTo = getSafeReturnTo(returnTo) ?? "/";
 

@@ -2,7 +2,8 @@ import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { PinIcon } from "@/components/ui/icons";
 import type { PropertyDetail } from "@/domain/types/property";
 
-interface PropertyInformationProps {
+/** Informations descriptives visibles sur la fiche logement. */
+export interface PropertyInformationProps {
   property: PropertyDetail;
 }
 
