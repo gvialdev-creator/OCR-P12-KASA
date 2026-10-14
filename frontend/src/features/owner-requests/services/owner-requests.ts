@@ -29,6 +29,7 @@ export function getMyOwnerRequest(token: string): Promise<OwnerRequestSelf | nul
   return request("/api/owner-requests/me", token);
 }
 
+/** Soumet une demande pour le compte authentifié; l’identité n’est pas fournie par le client. */
 export function submitOwnerRequest(token: string): Promise<OwnerRequestSelf> {
   return request("/api/owner-requests", token, { method: "POST" });
 }
@@ -37,6 +38,7 @@ export function listPendingOwnerRequests(token: string): Promise<OwnerRequestAdm
   return request("/api/admin/owner-requests", token);
 }
 
+/** Décide une demande; la promotion effective et la transition sont validées côté API. */
 export function decideOwnerRequest(id: number, decision: "approve" | "reject", token: string): Promise<OwnerRequestAdmin> {
   return request(`/api/admin/owner-requests/${id}`, token, {
     method: "PATCH",

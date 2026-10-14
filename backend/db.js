@@ -3,6 +3,10 @@ const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 
+/**
+ * Résout le fichier SQLite depuis DB_PATH ou le défaut local/production.
+ * Les chemins relatifs sont ancrés au dossier backend; `:memory:` reste spécial.
+ */
 function resolveDbPath(env = process.env) {
   if (env.DB_PATH) {
     if (env.DB_PATH === ':memory:') return env.DB_PATH;
@@ -19,6 +23,7 @@ function resolveDbPath(env = process.env) {
 const DB_PATH = resolveDbPath();
 const PROPS_JSON_PATH = path.join(__dirname, 'data', 'properties.json');
 
+/** Ouvre SQLite, crée le répertoire parent et ajoute les helpers Promise Async utilisés par les services. */
 function openDb(filename = DB_PATH, onOpen) {
   if (filename !== ':memory:') {
     fs.mkdirSync(path.dirname(filename), { recursive: true });
@@ -229,6 +234,7 @@ function slugify(input) {
   return slug || 'property';
 }
 
+/** Charge les propriétés de démonstration uniquement si la table properties est vide. */
 async function seedIfEmpty(db) {
   const row = await db.getAsync('SELECT COUNT(*) as c FROM properties');
   if (row && row.c > 0) return; // already seeded
@@ -337,6 +343,11 @@ function databaseErrorDetails(error) {
   };
 }
 
+/**
+ * Ouvre et sonde la DB, applique schéma/migrations, puis seed uniquement hors production.
+ * Le serveur peut écouter avant cette promesse; `dbReady` protège les routes jusque-là.
+ * @throws {Error} L’erreur est annotée avec l’étape `open`, `probe`, `schema` ou `seed`.
+ */
 async function initialize({ filename = DB_PATH, env = process.env } = {}) {
   let db;
   let stage = 'open';

@@ -7,6 +7,7 @@ const secret = () => {
   return configured || 'change-me-in-prod';
 };
 
+/** Émet un ticket socket distinct du JWT REST, valable au plus cinq minutes et borné par la session. */
 function issueTicket(userId, sessionExpiresAt) {
   const expiresAt = Math.min(Date.now() + 5 * 60 * 1000, sessionExpiresAt);
   const expiresIn = Math.floor((expiresAt - Date.now()) / 1000);
@@ -15,6 +16,7 @@ function issueTicket(userId, sessionExpiresAt) {
   return { token, expires_at: new Date(expiresAt).toISOString() };
 }
 
+/** Vérifie signature, audience, émetteur et sujet du ticket destiné au handshake Socket.IO. */
 function verifyTicket(token) {
   if (typeof token !== 'string' || token.length > 2048) throw new Error('Invalid ticket');
   const payload = jwt.verify(token, secret(), { algorithms: ['HS256'], audience: options.audience, issuer: options.issuer });

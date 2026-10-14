@@ -35,6 +35,7 @@ export function updateAccountProfile(
   });
 }
 
+/** Envoie la photo au service d’upload, qui réserve cet usage aux rôles autorisés. */
 export async function uploadProfilePicture(file: File, token: string): Promise<string> {
   const body = new FormData();
   body.set("file", file);

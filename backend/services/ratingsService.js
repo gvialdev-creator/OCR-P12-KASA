@@ -1,3 +1,4 @@
+/** Liste les notes publiques d’un logement avec les champs publics de leurs auteurs. */
 async function listRatingsForProperty(db, propertyId) {
   const prop = await db.getAsync('SELECT id FROM properties WHERE id = ?', [propertyId]);
   if (!prop) {
@@ -21,6 +22,12 @@ async function listRatingsForProperty(db, propertyId) {
   }));
 }
 
+/**
+ * Ajoute une note et recalcule moyenne/compteur du logement.
+ * Important : le service prend `user_id` dans le payload et la route actuelle
+ * n’exige pas d’authentification; cette identité n’est donc pas celle d’une session vérifiée.
+ * @throws {Error} Erreur avec `status` 400 si le score ou user_id est invalide, 404 si logement ou utilisateur manque.
+ */
 async function addRating(db, propertyId, { user_id, score, comment = null }) {
   const s = Number(score);
   if (!Number.isInteger(s) || s < 1 || s > 5) {

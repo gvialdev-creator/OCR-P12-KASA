@@ -15,7 +15,6 @@ Backend minimaliste pour l’application Kasa. Il expose une API REST (Express 5
 - Exemples rapides (curl)
 - Dépannage (FAQ)
 
----
 
 ## Présentation
 Ce projet fournit une API HTTP permettant de :
@@ -32,7 +31,7 @@ Le serveur est écrit avec Express 5 et persiste les données dans un fichier SQ
 Les routes de `routes/` associent une méthode/URL aux middlewares puis au controller. Les controllers traduisent la requête HTTP en appels métier ; les services de `services/` appliquent les règles et accèdent à SQLite. `databaseQueue` sérialise les opérations de la connexion partagée et fournit les transactions nécessaires aux écritures atomiques. Les réponses et statuts HTTP restent dans les controllers ; les règles métier ne doivent pas dépendre de l’interface frontend.
 
 ## Prérequis
-- Node.js 18+ (recommandé)
+- Node.js 20.9+ recommandé pour le workspace complet (Next.js 16). Le script backend local utilise `node --env-file`, disponible dans les versions Node récentes.
 - npm
 
 ## Installation & démarrage
@@ -40,13 +39,7 @@ Les routes de `routes/` associent une méthode/URL aux middlewares puis au contr
    - npm install
 2. Lancer le serveur:
    - npm start
-3. Le serveur écoute sur le port défini par `PORT` (la configuration d’exemple utilise 3001).
-
-Tests backend (à lancer depuis `backend/`) :
-
-```sh
-node --test
-```
+3. Le serveur écoute sur le port défini par `PORT`. Sans variable, `bin/www` utilise 3000 ; `backend/.env.example` fixe `PORT=3001`.
 
 ## Configuration (variables d’environnement)
 La messagerie utilise aussi `MESSAGING_SOCKET_SECRET` (secret serveur distinct recommande)
@@ -59,14 +52,23 @@ pas vers une Server Action ou un rewrite Next. Les exemples `.env.example` ne co
 - JWT_SECRET: secret pour signer/vérifier les tokens JWT (par défaut "change-me-in-prod"). En production, définissez une valeur forte et secrète.
 - DB_PATH (optionnel): chemin du fichier SQLite. Par défaut, `backend/data/kasa.sqlite3` en local et `/app/data/kasa.sqlite3` en production. Un chemin relatif est résolu depuis le dossier `backend`.
 
+- JWT_EXPIRES_IN (optionnel): durée du JWT de session (par défaut `7d`).
+
 Vous pouvez lancer le serveur avec, par exemple:
 - JWT_SECRET="votre-secret" PORT=3000 npm start
+
+Pour la suite complète de tests backend, installer également les dépendances frontend : le test Socket.IO partagé charge `socket.io-client` depuis `frontend/node_modules`. Depuis la racine, lancez `yarn --cwd frontend install`, puis exécutez depuis `backend/` :
+
+```sh
+node --test
+```
 
 ## Base de données & données de démo
 - SGBD: SQLite. Le fichier local par défaut est `data/kasa.sqlite3`; en production, le chemin par défaut est `/app/data/kasa.sqlite3`. `DB_PATH` permet de choisir un autre chemin.
 - Le dossier parent du fichier est créé automatiquement si nécessaire. En production, montez un stockage persistant et inscriptible sur `/app/data` (ou sur le dossier parent indiqué par `DB_PATH`); un dossier du conteneur éphémère ne garantit pas la conservation des données après redéploiement.
 - À chaque démarrage, le schéma et ses migrations sont appliqués. En local, si aucune propriété n’existe, un seed est effectué depuis `data/properties.json` (si présent). Ce seed de démonstration est désactivé en production.
-- Le schéma inclut: users, properties, property_pictures, property_equipments, property_tags, ratings, favorites.
+- Le schéma inclut : `users`, `properties`, `property_pictures`, `property_equipments`, `property_tags`, `ratings`, `favorites`, `owner_requests`, `conversations`, `messages` et `conversation_read_states`.
+- Les migrations sont appliquées au démarrage par le code d’initialisation SQLite. Elles sont incrémentales et idempotentes, mais il n’y a pas de registre central de versions de migration.
 - Les slugs des propriétés sont générés automatiquement et uniques.
 
 Sauvegarde: sauvegardez le fichier SQLite configuré par `DB_PATH` (ou le chemin par défaut de l’environnement). Le changement de chemin ne copie pas une base existante. En local, pour repartir de zéro, arrêtez le serveur et supprimez `data/kasa.sqlite3`, puis relancez-le pour recréer le schéma et charger le seed.
@@ -119,10 +121,12 @@ mot de passe de demonstration uniquement `PreviewOnly123!`. Ne pas deployer ce s
 Frontend : `API_BASE_URL=http://localhost:3101 NEXT_PUBLIC_MESSAGING_SOCKET_URL=http://localhost:3101 NEXT_DIST_DIR=.next-messaging yarn dev --port 3102`.
 `NEXT_DIST_DIR` permet la recette isolee sans perturber le build/dev existant.
 
-- Spécification: public/openapi.json
-- UI de test/exploration: http://localhost:3000/docs.html (après démarrage)
+`GET /api/conversations/with/:recipientId` est aussi disponible pour vérifier si une conversation existe avec un destinataire. Il exige une session; un identifiant invalide ou une tentative de se contacter soi-même renvoie une erreur `400`.
 
-Les endpoints sont groupés par tags: Auth, Properties, Users, Ratings, Favorites, Uploads. Les schémas de requête/réponse sont détaillés dans la spec.
+- Spécification: public/openapi.json
+- UI de test/exploration: `/docs.html` sur l’origine/port du backend (3000 par défaut si `PORT` n’est pas défini).
+
+Les opérations REST sont groupées dans OpenAPI sous Auth, Properties, Users, Ratings, Favorites, Uploads, Owner requests et Messaging. Les schémas de requête/réponse sont détaillés dans la spec.
 
 ## Authentification & rôles
 - Authentification: JWT via l’en-tête Authorization: Bearer <token>.
@@ -140,8 +144,8 @@ Endpoints d’auth principaux (voir OpenAPI pour le détail):
 ## Routes principales (aperçu)
 Base: /api
 - GET /api/properties: liste des propriétés
-- GET /api/properties/slug/:slug: détail d’une propriété par slug
 - GET /api/properties/:id: détail d’une propriété
+- GET /api/properties/slug/:slug: détail d’une propriété par slug (URL publique canonique du frontend)
 - POST /api/properties: création (rôle: owner ou admin)
 - PATCH /api/properties/:id: mise à jour (rôle: owner ou admin)
 - DELETE /api/properties/:id: suppression (rôle: owner ou admin)
@@ -162,9 +166,23 @@ Base: /api
 - POST /api/uploads/image: uploader une image (rôle: owner ou admin). Répond avec une URL publique /uploads/... et des instructions pour l’utiliser (cover, gallery, etc.).
 - DELETE /api/uploads/images: supprimer une ou plusieurs images (rôle: owner ou admin). Accepte des noms de fichiers ou des URLs; nettoie les références en base.
 
+- POST /api/owner-requests: un client authentifié soumet une demande owner (identité tirée de la session)
+- GET /api/owner-requests/me: consulter sa dernière demande (client authentifié)
+- GET /api/admin/owner-requests: lister les demandes en attente (admin)
+- PATCH /api/admin/owner-requests/:id: accepter ou refuser une demande (admin)
+
+Les routes `/api` et `/auth` peuvent répondre `503 Database not ready` pendant l’initialisation de SQLite. L’API HTTP est documentée dans `public/openapi.json`; les opérations REST détaillées sont consultables sur `/docs.html`.
+
+## Limites de comportement à connaître
+
+- Les mutations `PATCH` et `DELETE` d’un logement vérifient le rôle `owner` ou `admin`, mais le contrôleur ne vérifie pas que le logement appartient à l’owner connecté. Le service de mise à jour accepte actuellement `host_id`. Ne considérez donc pas le rôle owner comme une isolation par propriété.
+- La route publique `POST /api/properties/:id/ratings` n’exige actuellement pas de bearer token et utilise le `user_id` fourni dans le corps. Elle valide le score entre 1 et 5 et l’existence du compte, mais l’identité n’est pas liée à la session. Il n’existe pas de parcours rating dans le frontend à ce jour ; traitez l’identité et l’autorisation de cette route comme un point à arbitrer, pas comme une fonctionnalité de notation authentifiée.
+- L’upload valide le préfixe du MIME déclaré et limite le fichier à 10 MiB ; il ne vérifie pas la signature réelle du contenu. Si `property_id` est invalide, la vérification intervient après l’écriture du fichier et celui-ci peut rester orphelin. Suppression disque et nettoyage SQLite sont des opérations distinctes, non atomiques.
+- La réinitialisation de mot de passe est exposée par l’API, mais le frontend n’a pas de formulaire correspondant. Les nouvelles inscriptions par cette API reçoivent toujours le rôle `client` ; un admin peut créer directement un utilisateur sans identifiants via `POST /api/users`.
+
 ## Upload & suppression d’images
 - Dossier public: public/uploads (servi statiquement par Express)
-- Upload (multipart/form-data): champ file obligatoire. Champs optionnels: purpose (property-cover | property-picture | user-picture | other), property_id (validation d’existence).
+- Upload (multipart/form-data): champ `file` obligatoire, un fichier au plus, 10 MiB maximum. Le contrôle repose sur le type MIME déclaré comme `image/*`, pas sur la signature réelle du fichier. Champs optionnels: `purpose` (valeurs suggérées `property-cover`, `property-picture`, `user-picture`, `other`, mais chaîne non contrainte) et `property_id` (validation d’existence après l’écriture du fichier).
 - Réponse: url, filename, size, mimetype, purpose, instructions pour l’usage suivant.
 - Suppression: DELETE /api/uploads/images accepte dans le body JSON filename, filenames[], url, urls[] (ou équivalents en query). Sécurisé contre la traversée de chemins.
 

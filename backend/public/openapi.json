@@ -3,7 +3,7 @@
   "info": {
     "title": "Kasa Backend API",
     "version": "1.0.0",
-    "description": "OpenAPI 3.0 specification for the Kasa Backend API. Use /docs.html to explore and test endpoints."
+    "description": "OpenAPI 3.0 specification for the Kasa Backend API. Use /docs.html to explore and test endpoints. All /api and /auth routes can return 503 while database initialization is pending."
   },
   "servers": [
     { "url": "/", "description": "Relative server (use current host)" },
@@ -39,6 +39,25 @@
         "responses": {
           "201": { "description": "Created or resumed pair", "content": { "application/json": { "schema": { "type": "object", "properties": { "id": { "type": "integer" }, "participant_low_id": { "type": "integer" }, "participant_high_id": { "type": "integer" }, "created_at": { "type": "string", "format": "date-time" }, "last_message_at": { "type": "string", "format": "date-time" } } } } } },
           "400": { "$ref": "#/components/responses/MessagingError" }, "401": { "$ref": "#/components/responses/MessagingError" }, "404": { "$ref": "#/components/responses/MessagingError" }, "429": { "$ref": "#/components/responses/MessagingError" }, "503": { "$ref": "#/components/responses/MessagingError" }
+        }
+      }
+    },
+    "/api/conversations/with/{recipientId}": {
+      "get": {
+        "tags": ["Messaging"],
+        "summary": "Check whether a private conversation exists with a recipient",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "recipientId", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether a conversation exists",
+            "content": { "application/json": { "schema": { "type": "object", "required": ["exists"], "properties": { "exists": { "type": "boolean" } } } } }
+          },
+          "400": { "$ref": "#/components/responses/MessagingError" },
+          "401": { "$ref": "#/components/responses/MessagingError" },
+          "503": { "$ref": "#/components/responses/MessagingError" }
         }
       }
     },
@@ -163,7 +182,8 @@
         "summary": "Request a password reset token",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["email"], "properties": { "email": { "type": "string", "format": "email" } } } } } },
         "responses": {
-          "200": { "description": "Always OK (no user enumeration)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PasswordResetRequestResponse" } } } }
+          "200": { "description": "Always OK for a valid email (no user enumeration)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PasswordResetRequestResponse" } } } },
+          "400": { "description": "Invalid email format", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -205,6 +225,21 @@
           "401": { "description": "Authentication required", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "403": { "description": "Forbidden (owner or admin role required)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "409": { "description": "Duplicate id", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/properties/slug/{slug}": {
+      "get": {
+        "tags": ["Properties"],
+        "summary": "Get property details by slug",
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Property details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PropertyDetail" } } } },
+          "404": { "description": "Property not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "Database not ready", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -402,6 +437,7 @@
       "post": {
         "tags": ["Ratings"],
         "summary": "Add a rating to a property",
+        "description": "Current implementation does not require authentication; user_id is supplied in the request body and is not derived from a verified session.",
         "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } ],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RatingCreate" } } } },
         "responses": {
@@ -452,7 +488,7 @@
       "post": {
         "tags": ["Uploads"],
         "summary": "Upload an image and get a URL",
-        "description": "Process: 1) Upload an image to get a public URL. 2) Use the returned URL depending on the purpose: property-cover -> PATCH /api/properties/{id} with {\n\t\"cover\": \"<url>\" }, property-picture -> include the URL in the pictures array when creating a property, user-picture -> PATCH /api/users/{id} with { \"picture\": \"<url>\" }.",
+        "description": "Uploads one file whose declared MIME type starts with image/. Maximum size is 10 MiB. The purpose field is informational and is not restricted to the suggested values. The file is written before optional property_id validation; if that validation fails, the uploaded file may remain on disk.",
         "security": [ { "BearerAuth": [] } ],
         "requestBody": {
           "required": true,
@@ -461,8 +497,8 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "file": { "type": "string", "format": "binary", "description": "Image file" },
-                  "purpose": { "type": "string", "enum": ["property-cover", "property-picture", "user-picture", "other"], "description": "Optional: helps the API return tailored instructions" },
+                  "file": { "type": "string", "format": "binary", "description": "Image file; maximum size 10 MiB. The server checks the declared MIME type prefix, not the file contents." },
+                  "purpose": { "type": "string", "nullable": true, "description": "Optional informational value used to tailor instructions. Suggested values: property-cover, property-picture, user-picture, other; arbitrary strings are accepted." },
                   "property_id": { "type": "string", "description": "Optional: property id when purpose relates to a property (validates existence)" }
                 },
                 "required": ["file"]
@@ -486,8 +522,14 @@
         "summary": "Supprimer une ou plusieurs images",
         "description": "Fournissez des noms de fichiers (ex: \"abc.jpg\") ou des URLs (ex: \"/uploads/abc.jpg\"). L'API supprimera les fichiers et nettoiera les références en base (properties.cover, property_pictures.url, users.picture).",
         "security": [ { "BearerAuth": [] } ],
+        "parameters": [
+          { "name": "filename", "in": "query", "schema": { "type": "string" }, "description": "Single filename or /uploads URL." },
+          { "name": "filenames", "in": "query", "schema": { "type": "string" }, "description": "Comma-separated filenames or /uploads URLs." },
+          { "name": "url", "in": "query", "schema": { "type": "string" }, "description": "Single /uploads URL." },
+          { "name": "urls", "in": "query", "schema": { "type": "string" }, "description": "Comma-separated /uploads URLs." }
+        ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
@@ -693,7 +735,7 @@
           "description": { "type": "string" },
           "cover": { "type": "string", "description": "URL vers l'image de couverture. Pour envoyer un fichier, utilisez /api/uploads/image puis placez l'URL renvoyée ici." },
           "location": { "type": "string" },
-          "postal_code": { "type": "string", "description": "Code postal, par exemple 06000." },
+          "postal_code": { "type": "string", "nullable": true, "description": "Code postal à cinq chiffres ou null; conservé comme texte pour préserver les zéros initiaux." },
           "price_per_night": { "type": "number" },
           "host_id": { "type": "integer", "readOnly": true, "description": "Automatically set to the authenticated user's id on creation." },
           "pictures": { "type": "array", "description": "Liste d'URLs d'images. Pour envoyer un fichier, utilisez /api/uploads/image puis utilisez l'URL renvoyée.", "items": { "type": "string" } },
@@ -709,7 +751,7 @@
           "description": { "type": "string" },
           "cover": { "type": "string", "description": "URL vers l'image de couverture. Pour envoyer un fichier, utilisez /api/uploads/image puis placez l'URL renvoyée ici." },
           "location": { "type": "string" },
-          "postal_code": { "type": "string" },
+          "postal_code": { "type": "string", "nullable": true },
           "host_id": { "type": "integer" },
           "price_per_night": { "type": "number" }
         },
@@ -722,7 +764,15 @@
           "score": { "type": "integer", "minimum": 1, "maximum": 5 },
           "comment": { "type": "string", "nullable": true },
           "created_at": { "type": "string", "format": "date-time" },
-          "user": { "$ref": "#/components/schemas/UserPublic" }
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "name": { "type": "string" },
+              "picture": { "type": "string", "nullable": true }
+            },
+            "required": ["id", "name"]
+          }
         },
         "required": ["id", "score", "user"]
       },
@@ -751,7 +801,7 @@
           "filename": { "type": "string" },
           "size": { "type": "integer" },
           "mimetype": { "type": "string" },
-          "purpose": { "type": "string", "enum": ["property-cover", "property-picture", "user-picture", "other"], "nullable": true },
+          "purpose": { "type": "string", "nullable": true, "description": "Valeur fournie par l’appelant; les chaînes suggérées ne sont pas validées par le backend." },
           "property_id": { "type": "string", "nullable": true },
           "instructions": { "type": "string", "description": "Human-readable guidance on how to use the uploaded image URL next" }
         },

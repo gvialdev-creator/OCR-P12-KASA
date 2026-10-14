@@ -6,6 +6,7 @@ async function getUser(db, id) {
   return await db.getAsync('SELECT id, name, email, picture, role FROM users WHERE id = ?', [id]);
 }
 
+/** Crée un profil; l’appelant admin peut choisir explicitement un rôle privilégié. */
 async function createUser(db, { name, picture = null, role = 'client' }) {
   if (!name) {
     const err = new Error('name is required');
@@ -30,6 +31,11 @@ async function createUser(db, { name, picture = null, role = 'client' }) {
   }
 }
 
+/**
+ * Modifie uniquement le profil (nom, email, photo); les rôles sont interdits.
+ * L’autorisation self/admin est appliquée par le contrôleur/middleware avant l’appel.
+ * @throws {Error} Erreur avec `status` 400 pour des champs invalides/vides, 403 pour une tentative de changer le rôle, 404 si l’utilisateur n’existe pas, 409 si l’email est déjà utilisé.
+ */
 async function updateUser(db, id, changes, { allowAdminRole = false } = {}) {
   if (Object.prototype.hasOwnProperty.call(changes || {}, 'role')) {
     const err = new Error('Role changes must use an administrative workflow');

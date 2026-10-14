@@ -1,6 +1,10 @@
 const { Server } = require('socket.io');
 const { verifyTicket } = require('./socketTickets');
 
+/**
+ * Attache Socket.IO au serveur HTTP; accepte uniquement les origines configurées
+ * et les tickets valides, puis place les sockets dans leur room utilisateur côté serveur.
+ */
 function attachMessaging(server, app, config = {}) {
   const origins = config.origins || (process.env.MESSAGING_FRONTEND_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean);
   const allowed = (origin) => typeof origin === 'string' && origins.includes(origin);
@@ -31,6 +35,7 @@ function attachMessaging(server, app, config = {}) {
   return io;
 }
 
+/** Publie un nouveau message aux deux participants après commit; les retries ne sont pas rediffusés. */
 function publishMessageCreated(app, result) {
   if (!result.created) return;
   const { message, conversation } = result;
@@ -43,6 +48,7 @@ function publishMessageCreated(app, result) {
   app.locals.messaging?.to([`user:${message.sender_id}`, `user:${recipientId}`]).emit('messaging:message-created', event);
 }
 
+/** Diffuse la mise à jour du curseur de lecture aux deux membres de la conversation. */
 function publishReadUpdated(app, result) {
   const { conversation, read_state } = result;
   app.locals.messaging?.to([`user:${conversation.participant_low_id}`, `user:${conversation.participant_high_id}`])

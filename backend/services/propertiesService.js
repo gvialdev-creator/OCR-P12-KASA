@@ -1,3 +1,4 @@
+/** Convertit une ligne propriété jointe à son hôte vers la forme REST de base. */
 function mapPropertyRow(row) {
   if (!row) return null;
   return {
@@ -19,12 +20,14 @@ function genId() {
   return Math.random().toString(16).slice(2, 10);
 }
 
+/** Normalise un titre en slug ASCII lisible; utilise `property` si le résultat est vide. */
 function slugify(input) {
   const s = String(input || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const slug = s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');
   return slug || 'property';
 }
 
+/** Ajoute un suffixe numérique jusqu’à obtenir un slug libre, en excluant éventuellement le logement mis à jour. */
 async function ensureUniqueSlug(db, base, excludeId = null) {
   let slug = base;
   let n = 2;
@@ -38,6 +41,7 @@ async function ensureUniqueSlug(db, base, excludeId = null) {
   }
 }
 
+/** Liste les logements avec leur hôte, triés par titre croissant. */
 async function listProperties(db) {
   const rows = await db.allAsync(`
       SELECT p.*, u.name AS host_name, u.picture AS host_picture
@@ -72,6 +76,7 @@ async function getPropertyDetails(db, id) {
   return getPropertyDetailsFromRow(db, row);
 }
 
+/** Charge détail et relations galerie/équipements/catégories à partir du slug. */
 async function getPropertyDetailsBySlug(db, slug) {
   const row = await db.getAsync(`
     SELECT p.*, u.name AS host_name, u.picture AS host_picture
@@ -95,6 +100,13 @@ async function ensureHost(db, host_id, host) {
   return null;
 }
 
+/**
+ * Crée un logement, génère son slug unique et insère ses listes associées.
+ * Le contrôleur HTTP doit fournir l’hôte issu de l’identité authentifiée;
+ * cette fonction de service accepte également un host_id ou un objet host.
+ * Un prix absent/non positif retombe actuellement à 80; un code postal non nul
+ * doit contenir cinq chiffres. L’opération complète n’est pas transactionnelle.
+ */
 async function createProperty(db, payload) {
   const {
     id,
@@ -152,6 +164,12 @@ async function createProperty(db, payload) {
   return await getPropertyDetails(db, newId);
 }
 
+/**
+ * Modifie les champs permis et recalcule le slug si le titre change.
+ * Le contrôle API amont impose le rôle, pas l’appartenance du logement à l’owner;
+ * `host_id` figure parmi les champs modifiables par ce service.
+ * @throws {Error} Erreur avec `status` 400 si rien n’est modifiable ou si le code postal est invalide, 404 si le logement n’existe pas.
+ */
 async function updateProperty(db, id, changes) {
   const allowed = ['title', 'description', 'cover', 'location', 'postal_code', 'host_id', 'price_per_night'];
   if ('postal_code' in (changes || {}) && changes.postal_code !== null &&
@@ -193,6 +211,7 @@ async function updateProperty(db, id, changes) {
   return await getPropertyDetails(db, id);
 }
 
+/** Supprime un logement et ses relations en base via les clés étrangères; aucune vérification d’ownership n’est faite ici. */
 async function deleteProperty(db, id) {
   const r = await db.runAsync('DELETE FROM properties WHERE id = ?', [id]);
   if (r.changes === 0) {

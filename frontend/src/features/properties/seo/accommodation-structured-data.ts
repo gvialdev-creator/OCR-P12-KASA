@@ -1,5 +1,9 @@
 import type { PropertyDetail } from "@/domain/types/property";
 
+/**
+ * Construit le JSON-LD Accommodation à partir des seules données disponibles
+ * sur la fiche visible; les images sont dédupliquées et les champs absents omis.
+ */
 export function buildAccommodationStructuredData(
   property: PropertyDetail,
   siteUrl?: string,

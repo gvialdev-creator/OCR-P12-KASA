@@ -35,6 +35,11 @@ async function getMyLatestRequest(db, userId) {
   return { id: row.id, status: row.status, submitted_at: row.submitted_at, decided_at: row.decided_at };
 }
 
+/**
+ * Crée une demande pour l’utilisateur client authentifié par le contrôleur.
+ * L’index unique partiel en base protège aussi contre deux soumissions concurrentes.
+ * @throws {Error} Erreur avec `status` 403 si le rôle n’est pas client, 404 si le compte manque, 409 si une demande attend déjà.
+ */
 async function submitOwnerRequest(db, userId) {
   const user = await db.getAsync('SELECT role FROM users WHERE id = ?', [userId]);
   if (!user) throw createError('User not found', 404);
@@ -64,6 +69,11 @@ async function listPendingOwnerRequests(db) {
   return rows.map(mapRequest);
 }
 
+/**
+ * Applique une seule décision admin; approbation et promotion client→owner
+ * sont atomiques et refus ne change pas le rôle.
+ * @throws {Error} Erreur avec `status` 400 pour une décision invalide, 404 si la demande manque, 409 si elle a déjà été décidée ou si le demandeur n’est plus client.
+ */
 async function decideOwnerRequest(db, requestId, adminId, decision) {
   if (!['approve', 'reject'].includes(decision)) throw createError('decision must be approve or reject', 400);
   const nextStatus = decision === 'approve' ? 'approved' : 'rejected';

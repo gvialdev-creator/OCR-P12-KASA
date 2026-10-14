@@ -20,6 +20,7 @@ export async function getUserFavorites(userId: number, token: string): Promise<P
   return response.json() as Promise<Property[]>;
 }
 
+/** Ajoute ou retire le favori du compte associé au token; l’API garantit l’idempotence. */
 export async function setPropertyFavorite(
   propertyId: string,
   favorite: boolean,
