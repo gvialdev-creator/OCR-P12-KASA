@@ -98,6 +98,7 @@ export function PropertyCarousel({ images, title }: PropertyCarouselProps) {
               fill
               preload={index === 0}
               loading="eager"
+              fetchPriority="high"
               sizes={
                 showThumbnailsOnSide
                   ? "(max-width: 767px) calc(100vw - 48px), 550px"
@@ -145,7 +146,7 @@ export function PropertyCarousel({ images, title }: PropertyCarouselProps) {
                   <button
                     key={index}
                     type="button"
-                    className="flex size-3 shrink-0 items-center justify-center cursor-pointer rounded-full"
+                    className="flex size-6 shrink-0 items-center justify-center cursor-pointer rounded-full"
                     aria-label={`Aller à la photo ${index + 1} sur ${images.length}`}
                     aria-current={index === activeIndex ? "true" : undefined}
                     onClick={() => selectImage(index)}

@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PropertyPageProps): Promise<M
     ? `${siteUrl}/properties/${encodeURIComponent(property.slug)}`
     : undefined;
   const description =
-    property.description ?? `Découvrez ${property.title} sur Kasa.`;
+    property.description?.trim() || `Découvrez ${property.title} sur Kasa.`;
 
   return {
     title: `${property.title} | Kasa`,

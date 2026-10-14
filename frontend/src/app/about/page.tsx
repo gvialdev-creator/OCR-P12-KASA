@@ -1,33 +1,31 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const siteUrl = process.env.SITE_URL?.replace(/\/$/, "");
-  const aboutUrl = siteUrl ? `${siteUrl}/about` : undefined;
-  const description =
-    "Chez Kasa, nous croyons que chaque voyage mérite un lieu unique où se sentir bien.";
+const siteUrl = process.env.SITE_URL?.replace(/\/$/, "");
+const aboutUrl = siteUrl ? `${siteUrl}/about` : undefined;
+const description =
+  "Chez Kasa, nous croyons que chaque voyage mérite un lieu unique où se sentir bien.";
 
-  return {
+export const metadata: Metadata = {
+  title: "À propos | Kasa",
+  description,
+  ...(aboutUrl && {
+    alternates: { canonical: aboutUrl },
+  }),
+  openGraph: {
     title: "À propos | Kasa",
     description,
-    ...(aboutUrl && {
-      alternates: { canonical: aboutUrl },
-    }),
-    openGraph: {
-      title: "À propos | Kasa",
-      description,
-      type: "website",
-      ...(aboutUrl && { url: aboutUrl }),
-      images: [{ url: "/images/about-hero.webp", alt: "À propos chez Kasa" }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: "À propos | Kasa",
-      description,
-      images: ["/images/about-hero.webp"],
-    },
-  };
-}
+    type: "website",
+    ...(aboutUrl && { url: aboutUrl }),
+    images: [{ url: "/images/about-hero.webp", alt: "À propos chez Kasa" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "À propos | Kasa",
+    description,
+    images: ["/images/about-hero.webp"],
+  },
+};
 
 export default function AboutPage() {
   return (
@@ -67,6 +65,7 @@ export default function AboutPage() {
               priority
               sizes="(max-width: 768px) 100vw, 1120px"
               className="object-cover"
+              fetchPriority="high"
             />
           </div>
         </div>

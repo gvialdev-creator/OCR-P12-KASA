@@ -1,14 +1,6 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-VariableFont.ttf") format("truetype");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@theme {
+@theme inline {
   /* ========================================
      Colors
      ======================================== */
@@ -27,7 +19,7 @@
      ======================================== */
 
   --font-sans:
-    Inter,
+    var(--font-inter),
     ui-sans-serif,
     system-ui,
     -apple-system,

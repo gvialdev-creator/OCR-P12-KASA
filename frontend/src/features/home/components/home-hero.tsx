@@ -1,8 +1,5 @@
 import Image from "next/image";
 
-const heroImage =
-  "https://s3-eu-west-1.amazonaws.com/course.oc-static.com/projects/front-end-kasa-project/accommodation-20-1.jpg";
-
 export function HomeHero() {
   return (
     <section>
@@ -17,13 +14,14 @@ export function HomeHero() {
 
       <div className="relative mt-10 overflow-hidden rounded-2xl h-114.5">
         <Image
-          src={heroImage}
+          src="/images/home-hero.webp"
           alt="Appartement lumineux proposé à la location sur Kasa"
           fill
           preload
           loading="eager"
           sizes="(max-width: 1168px) 100vw, 1120px"
           className="object-cover"
+          fetchPriority="high"
         />
       </div>
     </section>

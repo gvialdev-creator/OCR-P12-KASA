@@ -7,11 +7,13 @@ import { getPropertyDetail } from "./get-property-detail";
 vi.mock("@/api/client", () => ({ apiFetch: vi.fn() }));
 
 describe("getPropertyDetail", () => {
-  it("fetches the latest property and host profile without a fixed cache duration", async () => {
+  it("caches property details for one hour", async () => {
     vi.mocked(apiFetch).mockResolvedValue({ host: { picture: "/uploads/current.jpg" } });
 
     await getPropertyDetail("studio-nice");
 
-    expect(apiFetch).toHaveBeenCalledWith("/api/properties/slug/studio-nice");
+    expect(apiFetch).toHaveBeenCalledWith("/api/properties/slug/studio-nice", {
+      revalidate: 3600,
+    });
   });
 });
