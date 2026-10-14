@@ -49,6 +49,24 @@ export function RegisterForm() {
         <input id="register-password" name="password" type="password" autoComplete="new-password" minLength={8} pattern={passwordPattern} title="8 caractères minimum, avec majuscule, minuscule, chiffre et symbole" aria-describedby={state.error ? "password-help register-error" : "password-help"} required className={inputClassName} aria-invalid={Boolean(state.error)} />
         <p id="password-help" className="mt-1 text-xs text-neutral-dark-grey">8 caractères minimum, avec majuscule, minuscule, chiffre et symbole.</p>
       </div>
+      <div className="flex items-start gap-2">
+        <input
+          id="accept-terms"
+          name="acceptTerms"
+          type="checkbox"
+          required
+          className="mt-1 size-4 shrink-0 accent-brand-main-red focus-visible:outline-2 focus-visible:outline-brand-main-red"
+        />
+        <label htmlFor="accept-terms" className="text-sm leading-5 text-neutral-black">
+          J’accepte les{" "}
+          <Link
+            href="/conditions-utilisation"
+            className="text-brand-main-red underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-brand-main-red"
+          >
+            conditions d’utilisation
+          </Link>
+        </label>
+      </div>
       {state.error && (
         <p id="register-error" role="alert" className="text-sm text-brand-main-red">
           {state.error}

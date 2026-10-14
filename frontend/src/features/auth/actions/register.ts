@@ -18,6 +18,7 @@ export async function registerAction(
   const givenNameValue = formData.get("givenName");
   const emailValue = formData.get("email");
   const password = formData.get("password");
+  const acceptedTerms = formData.get("acceptTerms") === "on";
   const familyName = typeof familyNameValue === "string" ? familyNameValue.trim() : "";
   const givenName = typeof givenNameValue === "string" ? givenNameValue.trim() : "";
   const email = typeof emailValue === "string" ? emailValue.trim() : "";
@@ -27,6 +28,9 @@ export async function registerAction(
   }
   if (typeof password !== "string" || !isValidNewPassword(password)) {
     return { error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un symbole." };
+  }
+  if (!acceptedTerms) {
+    return { error: "Vous devez accepter les conditions d’utilisation pour créer un compte." };
   }
 
   try {

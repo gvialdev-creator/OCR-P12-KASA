@@ -12,12 +12,13 @@ vi.mock("next/headers", () => ({ cookies: cookiesMock }));
 
 const registerMock = vi.mocked(registerWithApi);
 
-function details(familyName: string, givenName: string, email: string, password: string) {
+function details(familyName: string, givenName: string, email: string, password: string, acceptTerms = true) {
   const formData = new FormData();
   formData.set("familyName", familyName);
   formData.set("givenName", givenName);
   formData.set("email", email);
   formData.set("password", password);
+  if (acceptTerms) formData.set("acceptTerms", "on");
   return formData;
 }
 
@@ -36,6 +37,17 @@ describe("registerAction", () => {
   ])("rejects invalid input without calling the API", async (familyName, givenName, email, password) => {
     const result = await registerAction({ error: null }, details(familyName, givenName, email, password));
     expect(result.error).toBeTruthy();
+    expect(registerMock).not.toHaveBeenCalled();
+    expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it("requires acceptance of the terms before calling the API", async () => {
+    const result = await registerAction(
+      { error: null },
+      details("Dupont", "Marie", "marie@example.com", "GoodPass1!", false),
+    );
+
+    expect(result.error).toBe("Vous devez accepter les conditions d’utilisation pour créer un compte.");
     expect(registerMock).not.toHaveBeenCalled();
     expect(redirectMock).not.toHaveBeenCalled();
   });

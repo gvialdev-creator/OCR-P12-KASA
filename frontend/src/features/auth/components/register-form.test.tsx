@@ -10,7 +10,7 @@ vi.mock("@/features/auth/actions/register", () => ({ registerAction: registerMoc
 describe("RegisterForm", () => {
   beforeEach(() => registerMock.mockReset());
 
-  it("renders required personal details, a new password and a login link", () => {
+  it("renders required personal details, terms acceptance and a login link", () => {
     render(<RegisterForm />);
 
     expect(screen.getByRole("textbox", { name: "Nom" })).toHaveAttribute("autocomplete", "family-name");
@@ -20,8 +20,9 @@ describe("RegisterForm", () => {
     expect(screen.getByLabelText("Mot de passe")).toHaveAttribute("pattern");
     expect(screen.getByText(/8 caractères minimum.*majuscule.*minuscule.*chiffre.*symbole/)).toBeInTheDocument();
     expect(screen.getByLabelText("Mot de passe")).toHaveAttribute("autocomplete", "new-password");
+    expect(screen.getByRole("checkbox", { name: "J’accepte les conditions d’utilisation" })).toBeRequired();
+    expect(screen.getByRole("link", { name: "conditions d’utilisation" })).toHaveAttribute("href", "/conditions-utilisation");
     expect(screen.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", "/login");
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 
   it("announces an API error and keeps non-secret fields", async () => {
@@ -33,6 +34,7 @@ describe("RegisterForm", () => {
     await user.type(screen.getByRole("textbox", { name: "Prénom" }), "Marie");
     await user.type(screen.getByRole("textbox", { name: "Adresse email" }), "marie@example.com");
     await user.type(screen.getByLabelText("Mot de passe"), "GoodPass1!");
+    await user.click(screen.getByRole("checkbox", { name: "J’accepte les conditions d’utilisation" }));
     await user.click(screen.getByRole("button", { name: "S'inscrire" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Un compte avec ces informations existe déjà.");
