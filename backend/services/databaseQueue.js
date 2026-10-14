@@ -10,6 +10,7 @@ function enqueue(db, operation) {
   return result;
 }
 
+/** Installe une file d’exécution unique sur les méthodes Async de la connexion. */
 function installQueue(db) {
   if (queues.has(db)) return;
   queues.set(db, Promise.resolve());
@@ -20,6 +21,15 @@ function installQueue(db) {
   }
 }
 
+/**
+ * Exécute une opération SQLite atomique sur la connexion partagée.
+ * Les opérations sont sérialisées par connexion ; les appels imbriqués dans
+ * l’opération courante réutilisent son contexte. En cas d’échec, la transaction
+ * est annulée puis l’erreur d’origine est propagée.
+ * @param {object} db Connexion SQLite munie des méthodes Async.
+ * @param {() => Promise<unknown>} operation Travail effectué dans la transaction.
+ * @returns {Promise<unknown>} Résultat de l’opération après validation du commit.
+ */
 function transaction(db, operation) {
   return enqueue(db, async () => {
     await db.execAsync('BEGIN IMMEDIATE');

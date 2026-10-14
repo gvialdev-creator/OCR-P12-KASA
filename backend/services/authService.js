@@ -35,6 +35,12 @@ function signToken(user) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
+/**
+ * Crée un compte public avec le rôle `client` uniquement.
+ * Les rôles privilégiés sont attribués par les workflows autorisés, jamais
+ * à partir d’un rôle fourni par un formulaire d’inscription.
+ * @throws {Error} Erreur avec `status` 400 pour les champs invalides ou 409 si l’email existe déjà.
+ */
 async function register(db, { name, email, password, picture = null }) {
   if (!name) {
     const err = new Error('name is required'); err.status = 400; throw err;

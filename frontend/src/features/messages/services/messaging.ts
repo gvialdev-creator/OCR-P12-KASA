@@ -1,6 +1,11 @@
 import { ApiError } from "@/api/errors";
 import type { ConversationPage } from "@/features/messages/types";
 
+/**
+ * Effectue un appel REST de messagerie authentifié côté serveur.
+ * Les réponses ne sont jamais mises en cache ; le token reste dans l’en-tête
+ * Authorization et le délai réseau est limité à 15 secondes.
+ */
 export async function messagingRequest<T>(path: string, token: string, method = "GET", body?: unknown): Promise<T> {
   if (!process.env.API_BASE_URL) throw new ApiError("La messagerie n'est pas configurée.");
   let response: Response;
@@ -31,6 +36,11 @@ export async function messagingRequest<T>(path: string, token: string, method = 
   return response.json() as Promise<T>;
 }
 
+/**
+ * Détecte une conversation existante avec le destinataire.
+ * Si l’endpoint dédié n’est pas disponible (404), parcourt les pages de la liste
+ * des conversations ; les autres erreurs restent propagées à l’appelant.
+ */
 export async function hasConversationWithUser(recipientId: number, token: string): Promise<boolean> {
   try {
     const result = await messagingRequest<{ exists: boolean }>(

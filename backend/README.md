@@ -27,6 +27,10 @@ Ce projet fournit une API HTTP permettant de :
 
 Le serveur est écrit avec Express 5 et persiste les données dans un fichier SQLite. Les routes sont sécurisées par des middlewares d’authentification/autorisation basés sur JWT.
 
+### Flux de traitement d’une requête
+
+Les routes de `routes/` associent une méthode/URL aux middlewares puis au controller. Les controllers traduisent la requête HTTP en appels métier ; les services de `services/` appliquent les règles et accèdent à SQLite. `databaseQueue` sérialise les opérations de la connexion partagée et fournit les transactions nécessaires aux écritures atomiques. Les réponses et statuts HTTP restent dans les controllers ; les règles métier ne doivent pas dépendre de l’interface frontend.
+
 ## Prérequis
 - Node.js 18+ (recommandé)
 - npm
@@ -36,7 +40,13 @@ Le serveur est écrit avec Express 5 et persiste les données dans un fichier SQ
    - npm install
 2. Lancer le serveur:
    - npm start
-3. Le serveur écoute par défaut sur http://localhost:3000 (configurable via PORT).
+3. Le serveur écoute sur le port défini par `PORT` (la configuration d’exemple utilise 3001).
+
+Tests backend (à lancer depuis `backend/`) :
+
+```sh
+node --test
+```
 
 ## Configuration (variables d’environnement)
 La messagerie utilise aussi `MESSAGING_SOCKET_SECRET` (secret serveur distinct recommande)
@@ -62,6 +72,9 @@ Vous pouvez lancer le serveur avec, par exemple:
 Sauvegarde: sauvegardez le fichier SQLite configuré par `DB_PATH` (ou le chemin par défaut de l’environnement). Le changement de chemin ne copie pas une base existante. En local, pour repartir de zéro, arrêtez le serveur et supprimez `data/kasa.sqlite3`, puis relancez-le pour recréer le schéma et charger le seed.
 
 ## Documentation API (OpenAPI)
+
+La spécification OpenAPI dans `public/openapi.json` est la référence pour les paramètres, schémas, codes HTTP et réponses REST. L’interface HTML est servie par `/docs.html` lorsque le backend est lancé. Ce README donne seulement un aperçu des routes et des règles transversales.
+
 ### Messagerie privee
 
 `POST /api/conversations` reprend une paire canonique via `recipient_id`. Tous les roles
@@ -120,7 +133,7 @@ Les endpoints sont groupés par tags: Auth, Properties, Users, Ratings, Favorite
   - Certaines routes autorisent self-or-admin (ex: consulter/mettre à jour son propre profil ou administrateur).
 
 Endpoints d’auth principaux (voir OpenAPI pour le détail):
-- POST /auth/register: inscription email/mot de passe (role facultatif: client/owner; défaut: client)
+- POST /auth/register: inscription email/mot de passe ; toute nouvelle inscription reçoit le rôle `client`. Les rôles `owner` et `admin` ne sont pas attribués par cette route publique.
 - POST /auth/login: authentification, retourne un token JWT
 - POST /auth/request-reset, POST /auth/reset-password: flux de réinitialisation de mot de passe (pour développement, le token peut être renvoyé dans la réponse lorsque ce n’est pas en production).
 

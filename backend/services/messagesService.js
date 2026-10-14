@@ -20,6 +20,13 @@ async function loadMessages(db, userId, conversationId, options = {}) {
   return { messages, has_more: rows.length > limit };
 }
 
+/**
+ * Enregistre un message après vérification de l’appartenance à la conversation.
+ * Le UUID client rend les reprises réseau idempotentes : le même UUID et le
+ * même texte renvoient le message existant ; le réutiliser avec un autre texte
+ * produit une erreur 409. La création et la mise à jour de l’activité sont atomiques.
+ * @throws {Error} Erreur avec `status` 400/403/404/409 si le payload, les droits ou le UUID sont invalides.
+ */
 async function sendMessage(db, userId, conversationId, input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) fail(400, 'Invalid message');
   if (typeof input.body !== 'string' || !input.body.trim() || input.body.length > 4000) fail(400, 'Message must contain 1 to 4000 characters');
@@ -40,6 +47,7 @@ async function sendMessage(db, userId, conversationId, input = {}) {
   });
 }
 
+/** Avance de façon monotone le curseur de lecture vers un message de cette conversation. */
 async function markRead(db, userId, conversationId, messageId) {
   messageId = positiveId(messageId);
   return transaction(db, async () => {

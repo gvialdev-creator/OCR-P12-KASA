@@ -6,6 +6,12 @@ export interface SessionUser {
   picture: string | null;
 }
 
+/**
+ * Valide une session en faisant confirmer le profil et son rôle par l’API.
+ * Le contenu décodé du JWT sert uniquement à adresser la requête : il n’est
+ * pas considéré comme preuve de session avant la réponse du backend.
+ * Retourne `null` pour un token absent, mal formé, refusé ou non vérifiable.
+ */
 export async function getSessionUser(token: string | undefined): Promise<SessionUser | null> {
   if (!token || !process.env.API_BASE_URL) return null;
 
@@ -44,6 +50,7 @@ export async function getSessionUser(token: string | undefined): Promise<Session
   }
 }
 
+/** Indique si le backend reconnaît actuellement le token de session fourni. */
 export async function hasValidSession(token: string | undefined): Promise<boolean> {
   return (await getSessionUser(token)) !== null;
 }

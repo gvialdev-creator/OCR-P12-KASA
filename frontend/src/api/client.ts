@@ -3,9 +3,17 @@ import { ApiError } from "@/api/errors";
 const apiBaseUrl = process.env.API_BASE_URL;
 
 interface ApiFetchOptions {
+  /** Cache public en secondes ; absent ou nul, la réponse utilise `no-store`. */
   revalidate?: number;
 }
 
+/**
+ * Appelle l’API Express depuis le serveur Next.js et retourne son corps JSON.
+ * Les appels sont non mis en cache par défaut ; ne demander une revalidation
+ * que pour des données publiques dont le délai de fraîcheur est acceptable.
+ *
+ * @throws {ApiError} Si l’URL API manque, si le réseau échoue ou si l’API répond en erreur.
+ */
 export async function apiFetch<T>(
   path: string,
   options: ApiFetchOptions = {},

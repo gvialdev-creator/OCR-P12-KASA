@@ -16,6 +16,12 @@ async function membership(db, userId, conversationId) {
   return conversation;
 }
 
+/**
+ * Crée ou retrouve l’unique conversation privée de la paire d’utilisateurs.
+ * Les identifiants sont stockés dans l’ordre canonique et l’insertion est
+ * transactionnelle afin que des démarrages concurrents convergent vers la même ligne.
+ * @throws {Error} Erreur avec `status` 400 si l’identifiant est invalide ou si l’utilisateur se contacte lui-même ; 404 si le destinataire n’existe pas.
+ */
 async function startConversation(db, userId, recipientId) {
   recipientId = positiveId(recipientId);
   if (userId === recipientId) fail(400, 'Cannot message yourself');
