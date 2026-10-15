@@ -90,7 +90,18 @@ Les favoris sont réservés aux comptes connectés. Un visiteur qui clique sur l
 
 ### Demande owner et administration
 
-Un compte `client` peut demander le rôle owner depuis le menu « Ajouter un logement ». Une seule demande peut être en attente ; aucune motivation n’est demandée. Après refus, une nouvelle demande est possible et l’historique reste conservé. Un administrateur peut accepter ou refuser la demande ; l’approbation et le passage au rôle `owner` sont réalisés dans une même transaction backend.
+Le rôle de départ d’une inscription publique est `client`. Depuis le menu « Ajouter un logement », un client peut ouvrir le dialogue et soumettre une demande sans motivation. À chaque ouverture du dialogue, l’application relit la demande la plus récente : si elle est `pending`, le client voit qu’elle attend une décision et ne peut pas en soumettre une autre. Une seule demande en attente est autorisée par compte.
+
+```mermaid
+stateDiagram-v2
+	[*] --> Client
+	Client --> Pending: soumettre une demande
+	Pending --> Owner: admin accepte
+	Pending --> Client: admin refuse
+	Client --> Pending: nouvelle demande après refus
+```
+
+L’admin consulte `/admin/owner-requests`, qui ne présente que les demandes en attente, puis choisit d’accepter ou de refuser. L’approbation clôt la demande et attribue le rôle `owner` dans la même transaction ; le compte peut alors accéder au parcours de publication. Le refus clôt la demande sans changer le rôle : le compte reste `client`, peut soumettre une nouvelle demande, et l’historique de la demande refusée est conservé. Après une décision, le client retrouve son nouvel état en rouvrant le dialogue ou après une navigation qui recharge sa session.
 
 Les pages `/admin` et `/admin/owner-requests` sont réservées au rôle `admin`. Ces protections frontend améliorent le parcours, mais l’API reste l’autorité d’accès.
 
