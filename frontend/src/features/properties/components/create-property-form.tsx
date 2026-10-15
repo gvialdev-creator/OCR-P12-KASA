@@ -45,6 +45,7 @@ function ImageUploadField({ id, label, file, onChange, ariaRequired = false, pre
 export function CreatePropertyForm({ hostName, hostPicture }: { hostName: string; hostPicture: string | null }) {
   const [fields, setFields] = useState({ title: "", description: "", postal_code: "", location: "", price_per_night: "" });
   const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
+  const [equipmentError, setEquipmentError] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [cover, setCover] = useState<File | null>(null);
   const [pictureFields, setPictureFields] = useState<{ id: number; file: File | null }[]>([{ id: 0, file: null }]);
@@ -84,7 +85,7 @@ export function CreatePropertyForm({ hostName, hostPicture }: { hostName: string
   }
 
   return (
-    <form onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); startTransition(() => formAction(data)); }} className="mx-auto max-w-5xl space-y-6">
+    <form onSubmit={(event) => { event.preventDefault(); if (selectedEquipments.length === 0) { setEquipmentError(true); event.currentTarget.querySelector<HTMLInputElement>('input[name="equipments"]')?.focus(); return; } setEquipmentError(false); const data = new FormData(event.currentTarget); startTransition(() => formAction(data)); }} className="mx-auto max-w-5xl space-y-6">
       <Link href="/" className="inline-flex items-center rounded-sm bg-neutral-light-grey px-3 py-2 text-sm text-neutral-black hover:text-brand-main-red">← Retour</Link>
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold text-neutral-black">Ajouter une propriété</h1>
@@ -94,7 +95,7 @@ export function CreatePropertyForm({ hostName, hostPicture }: { hostName: string
       <div className="grid items-start gap-4 md:grid-cols-2">
         <section aria-label="Informations du logement" className="space-y-4 rounded-md border border-neutral-light-grey bg-neutral-white p-6 sm:p-10">
           <label className="block text-sm">Titre de la propriété<input name="title" required maxLength={150} value={fields.title} onChange={(event) => updateField("title", event.target.value)} placeholder="Ex : Appartement cosy au cœur de Paris" className={inputClass} /></label>
-          <label className="block text-sm">Description<textarea name="description" rows={5} value={fields.description} onChange={(event) => updateField("description", event.target.value)} className={inputClass} placeholder="Décrivez votre propriété en détail…" /></label>
+          <label className="block text-sm">Description<textarea name="description" required rows={5} value={fields.description} onChange={(event) => updateField("description", event.target.value)} className={inputClass} placeholder="Décrivez votre propriété en détail…" /></label>
           <label className="block text-sm">Code postal<input name="postal_code" required inputMode="numeric" pattern="[0-9]{5}" maxLength={5} title="Code postal à 5 chiffres" value={fields.postal_code} onChange={(event) => updateField("postal_code", event.target.value)} className={inputClass} /></label>
           <label className="block text-sm">Localisation<input name="location" required value={fields.location} onChange={(event) => updateField("location", event.target.value)} className={inputClass} /></label>
           <label className="block text-sm">Prix par nuit (€)<input name="price_per_night" type="number" required min="1" step="1" value={fields.price_per_night} onChange={(event) => updateField("price_per_night", event.target.value)} className={inputClass} /></label>
@@ -129,9 +130,10 @@ export function CreatePropertyForm({ hostName, hostPicture }: { hostName: string
           </div>
         </section>
         </div>
-        <fieldset className="rounded-md border border-neutral-light-grey bg-neutral-white p-6 sm:p-10">
+        <fieldset aria-describedby={equipmentError ? "equipments-error" : undefined} aria-invalid={equipmentError || undefined} onChange={() => setEquipmentError(false)} className="rounded-md border border-neutral-light-grey bg-neutral-white p-6 sm:p-10">
           <legend className="sr-only">Équipements</legend>
           <h2 className="mb-4 text-base font-semibold">Équipements</h2>
+          {equipmentError && <p id="equipments-error" role="alert" className="mb-3 text-sm text-brand-main-red">Sélectionnez au moins un équipement.</p>}
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             {equipments.map((equipment) => <label key={equipment} className="flex items-center gap-2 text-sm"><input type="checkbox" name="equipments" value={equipment} checked={selectedEquipments.includes(equipment)} onChange={() => toggleSelection(equipment, selectedEquipments, setSelectedEquipments)} className="accent-brand-main-red" />{equipment}</label>)}
           </div>
@@ -158,7 +160,7 @@ export function CreatePropertyForm({ hostName, hostPicture }: { hostName: string
                 </div>
               ))}
             </div>
-            <button type="button" onClick={addCustomTagField} className="mt-1 text-xs text-brand-main-red hover:underline">+ Ajouter un tag</button>
+            
           </div>
         </fieldset>
       </div>

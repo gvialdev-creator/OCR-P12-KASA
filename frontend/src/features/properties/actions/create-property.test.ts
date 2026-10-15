@@ -19,6 +19,7 @@ function validForm() {
   form.set("title", "Studio"); form.set("location", "Nice"); form.set("postal_code", "06000"); form.set("price_per_night", "90");
   form.set("cover", new File(["image"], "cover.jpg", { type: "image/jpeg" }));
   form.set("host_id", "999");
+  form.set("equipments", "WiFi");
   return form;
 }
 
@@ -54,6 +55,15 @@ describe("createPropertyAction", () => {
     const form = validForm(); form.set("postal_code", "6000");
     expect((await createPropertyAction({ error: null }, form)).error).toMatch(/code postal/);
     expect(uploadMock).not.toHaveBeenCalled();
+  });
+
+  it.each([null, "", "   "])("rejects missing or blank equipment before uploading (%s)", async (equipment) => {
+    const form = validForm();
+    form.delete("equipments");
+    if (equipment !== null) form.set("equipments", equipment);
+    expect((await createPropertyAction({ error: null }, form)).error).toBe("Sélectionnez au moins un équipement.");
+    expect(uploadMock).not.toHaveBeenCalled();
+    expect(createMock).not.toHaveBeenCalled();
   });
 
   it("cleans uploaded images if creation fails", async () => {

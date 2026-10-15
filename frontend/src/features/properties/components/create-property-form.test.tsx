@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -9,6 +9,18 @@ vi.mock("@/features/properties/actions/create-property", () => ({ createProperty
 
 describe("CreatePropertyForm", () => {
   afterEach(() => vi.unstubAllGlobals());
+  it("blocks submission without equipment and clears the error when selected", async () => {
+    createActionMock.mockClear();
+    const user = userEvent.setup();
+    render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
+    const equipment = screen.getByRole("checkbox", { name: "WiFi" });
+    fireEvent.submit(equipment.closest("form")!);
+    expect(screen.getByRole("alert")).toHaveTextContent("Sélectionnez au moins un équipement.");
+    expect(screen.getByRole("checkbox", { name: "Micro Ondes" })).toHaveFocus();
+    expect(createActionMock).not.toHaveBeenCalled();
+    await user.click(equipment);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
   it("shows required fields and optional categories", () => {
     render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture="/uploads/host.jpg" />);
     expect(screen.getByLabelText(/titre de la propriété/i)).toBeRequired();

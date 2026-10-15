@@ -29,7 +29,11 @@ export async function createPropertyAction(_state: CreatePropertyState, formData
   if (!(cover instanceof File) || !cover.size || pictures.length > 8 || files.some((file) => !(file instanceof File) || !file.type.startsWith("image/") || file.size > 10 * 1024 * 1024)) {
     return { error: "Choisissez une couverture et jusqu'à 8 photos, au format image (10 Mo maximum chacune)." };
   }
-  const equipments = formData.getAll("equipments").filter((value): value is string => typeof value === "string" && value.length < 80);
+  const equipments = formData.getAll("equipments")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0 && value.length < 80);
+  if (equipments.length === 0) return { error: "Sélectionnez au moins un équipement." };
   const tags = formData.getAll("tags").filter((value): value is string => typeof value === "string" && value.length < 80);
   const customTag = String(formData.get("customTag") ?? "").trim();
   if (customTag.length > 80) return { error: "La catégorie personnalisée est trop longue." };
