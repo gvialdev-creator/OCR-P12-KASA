@@ -223,7 +223,11 @@ export function ConversationView({ conversation, initialPage }: { conversation: 
     <form className="shrink-0 border-t border-neutral-dark-grey/15 bg-neutral-white p-3 md:p-5" onSubmit={(event) => { event.preventDefault(); send(); }}>
       {sendError && <p role="alert" className="mb-2 text-sm text-brand-main-red">{sendError}<button type="button" disabled={pending} onClick={send} className="ml-2 underline">Réessayer</button></p>}
       <div className="flex items-end gap-3">
-        <label className="min-w-0 flex-1"><span className="sr-only">Votre message</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} disabled={pending || sendError !== null} maxLength={4000} rows={2} placeholder="Votre message..." className="block max-h-40 min-h-14 w-full resize-y rounded-md border border-neutral-dark-grey/20 p-3 text-sm outline-brand-main-red disabled:opacity-60" /></label>
+        <label className="min-w-0 flex-1"><span className="sr-only">Votre message</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => {
+          if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229) return;
+          event.preventDefault();
+          if (!event.repeat) event.currentTarget.form?.requestSubmit();
+        }} disabled={pending || sendError !== null} maxLength={4000} rows={2} placeholder="Votre message..." className="block max-h-40 min-h-14 w-full resize-y rounded-md border border-neutral-dark-grey/20 p-3 text-sm outline-brand-main-red disabled:opacity-60" /></label>
         <button type="submit" disabled={pending || !draft.trim()} aria-label={pending ? "Envoi en cours" : "Envoyer"} title="Envoyer" className="flex size-11 shrink-0 items-center justify-center rounded-md bg-brand-main-red text-neutral-white hover:bg-brand-dark-orange disabled:opacity-40"><ArrowUpIcon className="size-5" /></button>
       </div>
       {pending && <p role="status" className="mt-2 text-xs text-neutral-dark-grey">Envoi en cours...</p>}

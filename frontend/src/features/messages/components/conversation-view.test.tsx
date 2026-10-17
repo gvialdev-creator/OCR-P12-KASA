@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ConversationView } from "./conversation-view";
 import type { Conversation, Message, MessagingEvent } from "@/features/messages/types";
@@ -55,6 +56,40 @@ it("keeps the draft and same UUID after an unconfirmed send, clearing only on su
   await waitFor(() => expect(screen.getByRole("textbox")).toHaveValue(""));
   expect(mocks.send.mock.calls[0]).toEqual(mocks.send.mock.calls[1]);
   expect(screen.getByText("Envoyé")).toBeInTheDocument();
+});
+
+it("sends a message with Enter and clears the draft on success", async () => {
+  const user = userEvent.setup();
+  mocks.send.mockResolvedValue({ data: message(3, 1), error: null });
+  render(<ConversationView conversation={conversation} initialPage={{ messages: [], has_more: false }} />);
+  await user.type(screen.getByRole("textbox"), "Bonjour{Enter}");
+  await waitFor(() => expect(mocks.send).toHaveBeenCalledWith(9, "Bonjour", expect.any(String)));
+  await waitFor(() => expect(screen.getByRole("textbox")).toHaveValue(""));
+  expect(mocks.send).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("button", { name: "Envoyer" })).toBeInTheDocument();
+});
+
+it("inserts a newline with Shift+Enter without sending", async () => {
+  const user = userEvent.setup();
+  render(<ConversationView conversation={conversation} initialPage={{ messages: [], has_more: false }} />);
+  await user.type(screen.getByRole("textbox"), "Bonjour{Shift>}{Enter}{/Shift}Jean");
+  expect(screen.getByRole("textbox")).toHaveValue("Bonjour\nJean");
+  expect(mocks.send).not.toHaveBeenCalled();
+});
+
+it("does not send empty drafts, repeated Enter events or IME composition", async () => {
+  render(<ConversationView conversation={conversation} initialPage={{ messages: [], has_more: false }} />);
+  await waitFor(() => expect(mocks.get).toHaveBeenCalledWith(9));
+  const input = screen.getByRole("textbox");
+  fireEvent.keyDown(input, { key: "Enter" });
+  fireEvent.change(input, { target: { value: "   " } });
+  fireEvent.keyDown(input, { key: "Enter" });
+  fireEvent.change(input, { target: { value: "Bonjour" } });
+  fireEvent.keyDown(input, { key: "Enter", repeat: true });
+  fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+  fireEvent.keyDown(input, { key: "Enter", keyCode: 229 });
+  expect(mocks.send).not.toHaveBeenCalled();
+  expect(input).toHaveValue("Bonjour");
 });
 
 it("catches up every reconnect page, deduplicates and shows read receipts", async () => {
