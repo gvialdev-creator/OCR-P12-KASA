@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CreatePropertyForm } from "./create-property-form";
 
@@ -8,6 +8,7 @@ const { createActionMock } = vi.hoisted(() => ({ createActionMock: vi.fn() }));
 vi.mock("@/features/properties/actions/create-property", () => ({ createPropertyAction: createActionMock }));
 
 describe("CreatePropertyForm", () => {
+  beforeEach(() => createActionMock.mockReset());
   afterEach(() => vi.unstubAllGlobals());
   it("blocks submission without equipment and clears the error when selected", async () => {
     createActionMock.mockClear();
@@ -24,6 +25,7 @@ describe("CreatePropertyForm", () => {
   it("shows required fields and optional categories", () => {
     render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture="/uploads/host.jpg" />);
     expect(screen.getByLabelText(/titre de la propriété/i)).toBeRequired();
+    expect(screen.getByLabelText(/^description$/i)).toBeRequired();
     expect(screen.getByLabelText(/code postal/i)).toHaveAttribute("pattern", "[0-9]{5}");
     expect(screen.getByLabelText(/image de couverture/i)).toHaveAttribute("aria-required", "true");
     expect(screen.getByLabelText("Image du logement 1")).not.toHaveAttribute("multiple");
@@ -99,6 +101,7 @@ describe("CreatePropertyForm", () => {
     render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
 
     await user.type(screen.getByLabelText(/titre de la propriété/i), "Studio");
+    await user.type(screen.getByLabelText(/^description$/i), "Studio lumineux à Nice.");
     await user.type(screen.getByLabelText(/code postal/i), "06000");
     await user.type(screen.getByLabelText(/localisation/i), "Nice");
     await user.type(screen.getByLabelText(/prix par nuit/i), "90");
@@ -108,6 +111,7 @@ describe("CreatePropertyForm", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Service indisponible");
     expect(screen.getByLabelText(/titre de la propriété/i)).toHaveValue("Studio");
+    expect(screen.getByLabelText(/^description$/i)).toHaveValue("Studio lumineux à Nice.");
     expect(screen.getByLabelText(/code postal/i)).toHaveValue("06000");
     expect(screen.getByRole("checkbox", { name: "WiFi" })).toBeChecked();
     expect(screen.getByAltText("Aperçu de la couverture")).toBeInTheDocument();
@@ -123,12 +127,21 @@ describe("CreatePropertyForm", () => {
     expect(screen.queryByRole("button", { name: "Retirer la catégorie Terrasse" })).not.toBeInTheDocument();
   });
 
-  it("adds another custom tag field from the link below the input", async () => {
+  it("reuses the custom category field to add multiple categories", async () => {
     const user = userEvent.setup();
     render(<CreatePropertyForm hostName="Hôte Kasa" hostPicture={null} />);
 
-    await user.click(screen.getByRole("button", { name: "+ Ajouter un tag" }));
+    const customCategory = screen.getByLabelText("Tag personnalisé 1");
+    await user.type(customCategory, "Terrasse");
+    await user.click(screen.getByRole("button", { name: "Ajouter ce tag" }));
+    expect(customCategory).toHaveValue("");
 
-    expect(screen.getByLabelText("Tag personnalisé 2")).toBeInTheDocument();
+    await user.type(customCategory, "Balcon");
+    await user.click(screen.getByRole("button", { name: "Ajouter ce tag" }));
+
+    expect(screen.getByRole("button", { name: "Retirer la catégorie Terrasse" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retirer la catégorie Balcon" })).toBeInTheDocument();
+    expect(customCategory).toHaveValue("");
+    expect(screen.queryByLabelText("Tag personnalisé 2")).not.toBeInTheDocument();
   });
 });
